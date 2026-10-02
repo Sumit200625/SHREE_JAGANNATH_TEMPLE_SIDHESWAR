@@ -1,0 +1,2099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview: Sidheswar Shree Jagannath Temple Digital Console</title>
+  
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Custom Tailwind Config matching tailwind.config.js -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            saffron: {
+              light: '#ff7a45',
+              DEFAULT: '#e35f24',
+              dark: '#b83a00',
+            },
+            gold: {
+              light: '#f3e5ab',
+              DEFAULT: '#d4af37',
+              dark: '#aa8c2c',
+            },
+            maroon: {
+              light: '#9a1a1a',
+              DEFAULT: '#800000',
+              dark: '#5c0000',
+            },
+            cream: {
+              light: '#fffef0',
+              DEFAULT: '#fffdd0',
+              dark: '#f5f2c2',
+            },
+            temple: {
+              50: '#fdfbfa',
+              100: '#faf3ee',
+              200: '#f3e2d6',
+              300: '#e5c4af',
+              400: '#d39e7d',
+              500: '#be744d',
+              600: '#ab5d3c',
+              700: '#8e4a2f',
+              800: '#753e28',
+              900: '#603523',
+              dark: '#1a0f0a',
+              darker: '#110906',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            odia: ['Noto Sans Odia', 'sans-serif'],
+            outfit: ['Outfit', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Odia:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- React CDNs -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  
+  <!-- Babel Standalone compiler -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #faf3ee;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(227, 95, 36, 0.4);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(227, 95, 36, 0.7);
+    }
+    .text-glow {
+      text-shadow: 0 0 10px rgba(212, 175, 55, 0.4), 0 0 20px rgba(227, 95, 36, 0.2);
+    }
+    .box-glow {
+      box-shadow: 0 0 15px rgba(227, 95, 36, 0.15), 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+    .sacred-border {
+      position: relative;
+    }
+    .sacred-border::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(to right, transparent, #d4af37, transparent);
+    }
+    .ticker-wrap {
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      background: #800000;
+      color: #fffdd0;
+      padding: 8px 0;
+      border-top: 1px solid rgba(212, 175, 55, 0.2);
+      border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+      font-size: 0.875rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .ticker-content {
+      display: inline-block;
+      animation: ticker 40s linear infinite;
+      padding-left: 100%;
+    }
+    @keyframes ticker {
+      0% { transform: translate3d(0, 0, 0); }
+      100% { transform: translate3d(-100%, 0, 0); }
+    }
+    .animate-bell {
+      animation: bellRing 2s ease-in-out infinite;
+      transform-origin: top center;
+    }
+    @keyframes bellRing {
+      0%, 100% { transform: rotate(0) }
+      15% { transform: rotate(10deg) }
+      30% { transform: rotate(-8deg) }
+      45% { transform: rotate(6deg) }
+      60% { transform: rotate(-4deg) }
+      75% { transform: rotate(2deg) }
+    }
+  </style>
+</head>
+<body class="bg-cream-light text-temple-900 font-sans transition-colors duration-300">
+  
+  <div id="root"></div>
+
+  <!-- React Source Compilation -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // =========================================================================
+    // MOCK DATABASE & API LAYER
+    // =========================================================================
+    const MOCK_USERS = [
+      { id: "usr_1", name: "Prakash Chandra Rath", email: "admin@siddheswar.org", phone: "9437199999", role: "super_admin", password: "password123" },
+      { id: "usr_2", name: "Rama Chandra Mishra", email: "seva@siddheswar.org", phone: "9437188888", role: "seva_manager", password: "password123" },
+      { id: "usr_3", name: "Suresh Kumar Sahu", email: "donation@siddheswar.org", phone: "9437177777", role: "donation_manager", password: "password123" },
+      { id: "usr_4", name: "Binod Bihari Mahapatra", email: "editor@siddheswar.org", phone: "9437166666", role: "content_editor", password: "password123" },
+      { id: "usr_5", name: "Kartik Nayak", email: "notice@siddheswar.org", phone: "9437155555", role: "notice_manager", password: "password123" },
+      { id: "usr_6", name: "Debasis Devotee", email: "devotee@gmail.com", phone: "9876543210", role: "devotee", password: "user123", gotra: "Kashyap", address: "Digapahandi, Ganjam, Odisha" }
+    ];
+
+    const SEED_NOTICES = [
+      { id: "not_1", titleEn: "Devotee Registration for Kartik Brata passes", titleOr: "କାର୍ତ୍ତିକ ବ୍ରତ ଦର୍ଶନ ପାସ୍ ପଞ୍ଜୀକରଣ", titleHi: "कार्तिक व्रत दर्शन पास पंजीकरण", contentEn: "Devotees visiting during Kartik Brata (starting in October) are advised to register at the Temple Trust Office for early morning Darshan passes. Queue management measures are being established.", category: "urgent", isPinned: true, publishDate: "2026-07-04", expiryDate: "2026-11-30" },
+      { id: "not_2", titleEn: "Weekly Annadan Seva inside Anandabazar Complex", titleOr: "ଆନନ୍ଦବଜାରରେ ସାପ୍ତାହିକ ଅନ୍ନଦାନ ସେବା କାର୍ଯ୍ୟକାରୀ", titleHi: "आनंदबाजार परिसर में साप्ताहिक अन्नदान सेवा", contentEn: "Annadan Seva (Mahaprasad Distribution) is now fully operational every Sunday from 1:00 PM to 3:00 PM in the new Anandabazar complex behind the temple.", category: "general", isPinned: false, publishDate: "2026-06-30", expiryDate: "2026-12-31" },
+      { id: "not_3", titleEn: "Donations for Boundary Wall construction accepted", titleOr: "ମେଘନାଦ ପାଚେରୀ ନିର୍ମାଣ ପାଇଁ ଦାନ ସହାୟତା", titleHi: "चारदीवारी निर्माण के लिए दान स्वीकार्य", contentEn: "Donations for the construction of the new boundary wall (Meghnad Pacheri) are accepted through UPI, Net Banking, and at the Temple Office counters. Receipt will be provided instantly.", category: "committee", isPinned: false, publishDate: "2026-06-15", expiryDate: "2026-09-30" }
+    ];
+
+    const SEED_FESTIVALS = [
+      { id: "fest_1", nameEn: "Rath Yatra (Chariot Festival)", nameOr: "ଶ୍ରୀ ଗୁଣ୍ଡିଚା ରଥଯାତ୍ରା", nameHi: "रथ यात्रा", date: "2026-07-16", descriptionEn: "The grandest festival where Lord Jagannath, along with siblings Lord Balabhadra and Devi Subhadra, leaves the temple inner sanctum to visit Gundicha Temple. Pulled by thousands of devotees.", timingsEn: "Pahandi: 8:00 AM, Chariot Pulling: 3:30 PM", parkingInfoEn: "Two-wheeler parking at High School Ground. Cars parked at Block Office bypass.", emergencyContact: "+91 94371 XXXXX", imageUrl: "assets/rath_yatra.png" },
+      { id: "fest_2", nameEn: "Deba Snana Purnima", nameOr: "ଦେବ ସ୍ନାନ ପୂର୍ଣ୍ଣିମା", nameHi: "देव स्नान पूर्णिमा", date: "2026-06-29", descriptionEn: "The divine bathing festival where the deities are bathed with 108 pots of sanctified water. Followed by the grand Hati Besha.", timingsEn: "Bathing: 9:00 AM, Hati Besha: 4:00 PM onwards", parkingInfoEn: "Free temple parking with entry limits from Digapahandi Road.", emergencyContact: "+91 93378 22942", imageUrl: "assets/deity_darshan.png" }
+    ];
+
+    const SEED_SEVAS = [
+      { id: "sev_1", devoteeName: "Kailash Chandra Patnaik", email: "kailash@patnaik.org", phone: "9876543222", gotra: "Vatsa", address: "Brahmapur", selectedDate: "2026-07-10", sevaType: "Annadan Seva (Mahaprasad)", amount: 1100, bookingReference: "SEVA-761012-9843", paymentStatus: "paid", approvalStatus: "approved", createdAt: "2026-07-01T10:00:00Z" }
+    ];
+
+    const SEED_DONATIONS = [
+      { id: "don_1", donorName: "Anil Kumar Jena", email: "aniljena@gmail.com", phone: "9438012345", panNumber: "ABCDE1234F", amount: 5001, category: "construction_fund", isAnonymous: false, paymentGateway: "UPI", transactionId: "TXN987654321", receiptNumber: "RECEIPT-2026-1082", date: "2026-07-02T11:20:00Z" }
+    ];
+
+    const SEED_GALLERY = [
+      { id: "gal_1", titleEn: "The Three Deities", category: "deities", type: "image", url: "assets/deity_darshan.png", isApproved: true, uploadedBy: "System" },
+      { id: "gal_2", titleEn: "Temple Spire View", category: "temple_architecture", type: "image", url: "assets/temple_exterior.png", isApproved: true, uploadedBy: "System" },
+      { id: "gal_3", titleEn: "Rath Yatra Pulling", category: "festivals", type: "image", url: "assets/rath_yatra.png", isApproved: true, uploadedBy: "System" }
+    ];
+
+    const SEED_FAQS = [
+      { id: "faq_1", questionEn: "What are the timings of Mangala Aarti?", answerEn: "Mangala Aarti takes place daily at 05:30 AM right after the temple gates open at 05:00 AM." },
+      { id: "faq_2", questionEn: "Are mobile phones allowed inside the premises?", answerEn: "Mobile phones and photography are strictly prohibited inside the main temple premises. Secure shoe-counter lockers are available." }
+    ];
+
+    // Local DB Inits
+    const initLocalDB = () => {
+      if (!localStorage.getItem('preview-users')) localStorage.setItem('preview-users', JSON.stringify(MOCK_USERS));
+      if (!localStorage.getItem('preview-notices')) localStorage.setItem('preview-notices', JSON.stringify(SEED_NOTICES));
+      if (!localStorage.getItem('preview-festivals')) localStorage.setItem('preview-festivals', JSON.stringify(SEED_FESTIVALS));
+      if (!localStorage.getItem('preview-sevas')) localStorage.setItem('preview-sevas', JSON.stringify(SEED_SEVAS));
+      if (!localStorage.getItem('preview-donations')) localStorage.setItem('preview-donations', JSON.stringify(SEED_DONATIONS));
+      if (!localStorage.getItem('preview-gallery')) localStorage.setItem('preview-gallery', JSON.stringify(SEED_GALLERY));
+      if (!localStorage.getItem('preview-faqs')) localStorage.setItem('preview-faqs', JSON.stringify(SEED_FAQS));
+      if (!localStorage.getItem('preview-tickets')) localStorage.setItem('preview-tickets', JSON.stringify([]));
+    };
+
+    initLocalDB();
+
+    const fetchTable = (key) => JSON.parse(localStorage.getItem(key));
+    const saveTable = (key, data) => localStorage.setItem(key, JSON.stringify(data));
+
+    // =========================================================================
+    // TRANSLATIONS DICTIONARY
+    // =========================================================================
+    const trans = {
+      en: {
+        home: "Home", about: "About Temple", darshan: "Darshan & Rituals", festivals: "Festival Calendar", seva: "Seva & Puja", donation: "Donation / Hundi", prasad: "Prasad Info", gallery: "Gallery", notices: "Notices", visit: "Plan Visit", contact: "Contact", adminLogin: "Admin Login", logout: "Logout",
+        templeName: "Sidheswar Shree Jagannath Temple", location: "9JMV+VVC, Sidhaswar, Odisha 761054", jaiJagannath: "Jai Jagannath",
+        open: "Open", closed: "Closed", fraudWarning: "Fraud Warning: Use only official temple details.", viewTimings: "View Timings", getDirections: "Directions", donateNow: "Donate Now",
+        templeStatus: "Today's Status", morningAarti: "Morning Aarti", noonBhoga: "Noon Bhoga", eveningAarti: "Evening Aarti", closingTime: "Closing Time", dailyTimings: "Daily Schedule",
+        upcomingFestival: "Upcoming Festival Countdown", days: "Days", hours: "Hrs", minutes: "Mins", seconds: "Secs"
+      },
+      or: {
+        home: "ଗୃହ", about: "ମନ୍ଦିର ବିଷୟରେ", darshan: "ଦର୍ଶନ ସମୟ", festivals: "କ୍ୟାଲେଣ୍ଡର", seva: "ସେବା ବୁକିଂ", donation: "ଦାନ ହୁଣ୍ଡି", prasad: "ପ୍ରସାଦ", gallery: "ଗ୍ୟାଲେରୀ", notices: "ସୂଚନା", visit: "ମାର୍ଗ ଦର୍ଶକ", contact: "ଯୋଗାଯୋଗ", adminLogin: "ପ୍ରଶାସନ", logout: "ଲଗଆଉଟ୍",
+        templeName: "ସିଦ୍ଧେଶ୍ୱର ଶ୍ରୀ ଜଗନ୍ନାଥ ମନ୍ଦିର", location: "9JMV+VVC, ସିଦ୍ଧେଶ୍ୱର, ଓଡ଼ିଶା 761054", jaiJagannath: "ଜୟ ଜଗନ୍ନାଥ",
+        open: "ଖୋଲା ଅଛି", closed: "ବନ୍ଦ ଅଛି", fraudWarning: "ଜାଲିଆତି ଚେତାବନୀ: କେବଳ ଅଫିସିଆଲ୍ ପାଣ୍ଠି ଦାନ କରନ୍ତୁ।", viewTimings: "ସମୟ ସୂଚୀ", getDirections: "ମାର୍ଗ ଦେଖନ୍ତୁ", donateNow: "ଦାନ କରନ୍ତୁ",
+        templeStatus: "ମନ୍ଦିର ସ୍ଥିତି", morningAarti: "ମଙ୍ଗଳ ଆଳତି", noonBhoga: "ମଧ୍ୟାହ୍ନ ଭୋଗ", eveningAarti: "ସନ୍ଧ୍ୟା ଆଳତି", closingTime: "ରାତ୍ରି ପହୁଡ଼", dailyTimings: "ନୀତିକାନ୍ତି ସମୟ",
+        upcomingFestival: "ଉତ୍ସବ କାଉଣ୍ଟଡାଉନ", days: "ଦିନ", hours: "ଘଣ୍ଟା", minutes: "ମିନିଟ୍", seconds: "ସେକେଣ୍ଡ"
+      },
+      hi: {
+        home: "गृह", about: "मंदिर के बारे में", darshan: "दर्शन समय", festivals: "कैलेंडर", seva: "सेवा बुकिंग", donation: "दान हुंडी", prasad: "प्रसाद", gallery: "गैलरी", notices: "सूचनाएं", visit: "यात्रा योजना", contact: "संपर्क", adminLogin: "एडमिन", logout: "लॉगआउट",
+        templeName: "सिद्धेश्वर श्री जगन्नाथ मंदिर", location: "9JMV+VVC, सिद्धेश्वर, ओडिशा 761054", jaiJagannath: "जय जगन्नाथ",
+        open: "खुला है", closed: "बंद है", fraudWarning: "धोखाधड़ी चेतावनी: केवल आधिकारिक विवरण का उपयोग करें।", viewTimings: "समय देखें", getDirections: "मार्ग दर्शन", donateNow: "दान करें",
+        templeStatus: "मंदिर की स्थिति", morningAarti: "मंगला आरती", noonBhoga: "मध्याह्न भोग", eveningAarti: "संध्या आरती", closingTime: "शयन काल", dailyTimings: "दैनिक दर्शन समय",
+        upcomingFestival: "उत्सव उलटी गिनती", days: "दिन", hours: "घंटे", minutes: "मिनट", seconds: "सेकंड"
+      }
+    };
+
+    // =========================================================================
+    // CANVAS PARTICLE DRAW COMPONENT
+    // =========================================================================
+    function ParticleBackground() {
+      const canvasRef = useRef(null);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let w = (canvas.width = canvas.offsetWidth);
+        let h = (canvas.height = canvas.offsetHeight);
+
+        const particles = [];
+        const count = 30;
+        const colors = ['rgba(227,95,36,', 'rgba(212,175,55,', 'rgba(243,229,171,'];
+
+        class Spark {
+          constructor() {
+            this.reset();
+            this.y = Math.random() * h;
+          }
+          reset() {
+            this.x = Math.random() * w;
+            this.y = h + 10;
+            this.size = Math.random() * 2 + 1;
+            this.speedY = -(Math.random() * 0.6 + 0.2);
+            this.speedX = Math.random() * 0.3 - 0.15;
+            this.alpha = Math.random() * 0.4 + 0.1;
+            this.time = Math.random() * 100;
+            this.sway = Math.random() * 1.5 + 0.5;
+            this.color = colors[Math.floor(Math.random() * colors.length)];
+          }
+          update() {
+            this.y += this.speedY;
+            this.time += 0.01;
+            this.x += this.speedX + Math.sin(this.time) * 0.1 * this.sway;
+            if (this.y < h * 0.2) this.alpha -= 0.003;
+            if (this.y < -10 || this.alpha <= 0) this.reset();
+          }
+          draw() {
+            ctx.beginPath();
+            const rad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 2);
+            rad.addColorStop(0, `${this.color}${this.alpha})`);
+            rad.addColorStop(1, `${this.color}0)`);
+            ctx.fillStyle = rad;
+            ctx.arc(this.x, this.y, this.size * 2.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        for (let i = 0; i < count; i++) particles.push(new Spark());
+
+        let animId;
+        const loop = () => {
+          ctx.clearRect(0, 0, w, h);
+          particles.forEach(p => { p.update(); p.draw(); });
+          animId = requestAnimationFrame(loop);
+        };
+        loop();
+
+        const resize = () => {
+          w = canvas.width = canvas.parentElement.offsetWidth;
+          h = canvas.height = canvas.parentElement.offsetHeight;
+        };
+        window.addEventListener('resize', resize);
+        return () => {
+          cancelAnimationFrame(animId);
+          window.removeEventListener('resize', resize);
+        };
+      }, []);
+
+      return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-10 opacity-60" />;
+    }
+
+    // =========================================================================
+    // MAIN APP ENTRY
+    // =========================================================================
+    function App() {
+      // Global Page State (Simple Router mimic)
+      const [page, setPage] = useState('home');
+      const [lang, setLang] = useState('en');
+      const [user, setUser] = useState(null);
+
+      // Shared Global States for instant Preview action
+      const [allSevas, setAllSevas] = useState(fetchTable('preview-sevas'));
+      const [allDonations, setAllDonations] = useState(fetchTable('preview-donations'));
+      const [allNotices, setAllNotices] = useState(fetchTable('preview-notices'));
+      const [allFaqs, setAllFaqs] = useState(fetchTable('preview-faqs'));
+      const [allGallery, setAllGallery] = useState(fetchTable('preview-gallery'));
+      const [allTickets, setAllTickets] = useState(fetchTable('preview-tickets'));
+
+      const t = (key) => trans[lang][key] || trans['en'][key] || key;
+
+      // Handle Page Navigation Helper
+      const navigateTo = (p) => {
+        setPage(p);
+        window.scrollTo(0, 0);
+      };
+
+      // Status check
+      const [isOpen, setIsOpen] = useState(true);
+      useEffect(() => {
+        const now = new Date();
+        const hr = now.getHours();
+        setIsOpen((hr >= 5 && hr <= 12) || (hr >= 16 && hr <= 21));
+      }, []);
+
+      return (
+        <div className="flex flex-col min-h-screen bg-cream-light text-temple-900">
+          
+          {/* TOP DEVIATIONAL SECURITY ALERT */}
+          <div className="bg-maroon text-cream-light py-1 px-4 text-center text-[10px] md:text-xs font-semibold flex items-center justify-center gap-2 border-b border-gold/20">
+            <i className="fa-solid fa-shield-halved text-gold animate-pulse"></i>
+            <span>{t('fraudWarning')}</span>
+          </div>
+
+          {/* STICKY HEADER */}
+          <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-saffron/10 shadow-sm py-4">
+            <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
+              
+              {/* Logo */}
+              <div onClick={() => navigateTo('home')} className="flex items-center gap-2.5 cursor-pointer">
+                <i className="fa-solid fa-dharmachakra text-3xl text-saffron animate-spin-slow"></i>
+                <div className="flex flex-col">
+                  <h1 className="text-sm md:text-base font-bold font-outfit text-maroon leading-tight">{t('templeName')}</h1>
+                  <span className="text-[10px] text-saffron-dark font-medium">{t('location')}</span>
+                </div>
+              </div>
+
+              {/* Desktop Nav Links */}
+              <nav className="hidden xl:flex items-center space-x-1.5 text-xs font-bold font-outfit">
+                {['home', 'about', 'darshan', 'festivals', 'seva', 'donation', 'prasad', 'gallery', 'notices', 'visit', 'contact'].map((p) => (
+                  <button 
+                    key={p} 
+                    onClick={() => navigateTo(p)}
+                    className={`px-2.5 py-1.5 rounded-lg transition-colors ${
+                      page === p ? 'bg-saffron/10 text-saffron' : 'hover:bg-saffron/5 text-temple-800'
+                    }`}
+                  >
+                    {t(p)}
+                  </button>
+                ))}
+              </nav>
+
+              {/* Controls */}
+              <div className="flex items-center gap-3">
+                {/* Language Cycle */}
+                <button 
+                  onClick={() => setLang(lang === 'en' ? 'or' : lang === 'or' ? 'hi' : 'en')}
+                  className="px-2.5 py-1 border border-saffron/20 bg-temple-50 rounded-full text-xs font-bold text-temple-800 flex items-center gap-1.5 shadow-sm"
+                >
+                  <i className="fa-solid fa-globe text-saffron"></i>
+                  <span>{lang === 'en' ? 'English' : lang === 'or' ? 'ଓଡ଼ିଆ' : 'हिन्दी'}</span>
+                </button>
+
+                {/* Account button */}
+                {user ? (
+                  <div className="flex items-center gap-1.5">
+                    <button 
+                      onClick={() => navigateTo(user.role === 'devotee' ? 'profile' : 'admin')}
+                      className="px-3.5 py-1 bg-saffron text-white rounded-full text-xs font-bold flex items-center gap-1 hover:bg-saffron-dark transition-all"
+                    >
+                      <i className="fa-solid fa-circle-user"></i>
+                      <span>{user.role === 'devotee' ? 'My Account' : 'Admin'}</span>
+                    </button>
+                    <button 
+                      onClick={() => { setUser(null); navigateTo('home'); }}
+                      className="p-1.5 text-maroon hover:bg-maroon/5 rounded-full"
+                      title="Log Out"
+                    >
+                      <i className="fa-solid fa-power-off text-sm"></i>
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={() => navigateTo('login')}
+                    className="px-3.5 py-1.5 bg-maroon text-cream-light rounded-full text-xs font-bold hover:bg-maroon-light shadow-sm"
+                  >
+                    {t('adminLogin')}
+                  </button>
+                )}
+              </div>
+
+            </div>
+          </header>
+
+          {/* MAIN PAGE CONTAINER */}
+          <main className="flex-grow">
+            
+            {/* 1. HOME VIEW */}
+            {page === 'home' && (
+              <div className="animate-fadeIn">
+                {/* Hero section */}
+                <section className="relative h-[80vh] flex items-center justify-center bg-temple-darker overflow-hidden text-center">
+                  <div className="absolute inset-0 bg-[url('assets/hero_jagannath.png')] bg-cover bg-center opacity-40 scale-102"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-temple-darker via-transparent to-transparent"></div>
+                  <ParticleBackground />
+
+                  <div className="relative z-20 max-w-4xl px-4 flex flex-col items-center">
+                    <i className="fa-solid fa-bell text-gold text-4xl mb-4 animate-bell"></i>
+                    <h2 className="text-3xl md:text-5xl font-extrabold font-outfit text-white text-glow leading-tight">{t('templeName')}</h2>
+                    <p className="text-gold font-bold tracking-widest text-lg md:text-xl mt-2">{t('jaiJagannath')}</p>
+                    <p className="text-cream-light/85 text-xs md:text-base max-w-xl mt-4 leading-relaxed">
+                      Official digital platform of Ganjam's holy Patita Pavan shrine. View timings, book pujas, and contribute to temple construction.
+                    </p>
+
+                    <div className="flex gap-3 justify-center mt-8 flex-wrap text-xs font-bold">
+                      <button onClick={() => navigateTo('darshan')} className="px-5 py-2.5 bg-saffron text-white rounded-xl shadow-lg hover:scale-103 transition-transform">{t('viewTimings')}</button>
+                      <button onClick={() => navigateTo('visit')} className="px-5 py-2.5 bg-gold text-temple-darker rounded-xl shadow-lg hover:scale-103 transition-transform">{t('getDirections')}</button>
+                      <button onClick={() => navigateTo('donation')} className="px-5 py-2.5 bg-maroon text-cream-light rounded-xl shadow-lg hover:scale-103 transition-transform">{t('donateNow')}</button>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Status Ticker */}
+                <div className="ticker-wrap font-odia text-xs">
+                  <div className="ticker-content">
+                    {t('quoteText')} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {t('quoteText')}
+                  </div>
+                </div>
+
+                {/* Status grid */}
+                <section className="py-12 max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Status Card */}
+                  <div className="glass-card p-6 border-t-4 border-saffron flex flex-col justify-between items-center text-center">
+                    <h3 className="text-sm font-bold text-temple-800 uppercase">{t('templeStatus')}</h3>
+                    <div className={`mt-3 px-4 py-1 rounded-full font-bold text-sm inline-flex items-center gap-1.5 ${
+                      isOpen ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                    }`}>
+                      <span className={`w-2 h-2 rounded-full ${isOpen ? 'bg-emerald-600 animate-ping' : 'bg-rose-600'}`}></span>
+                      <span>{isOpen ? t('open') : t('closed')}</span>
+                    </div>
+                    <span className="text-[10px] text-temple-500 font-semibold mt-4">Nitis start: 05:00 AM - 09:00 PM</span>
+                  </div>
+
+                  {/* Quick schedules */}
+                  <div className="md:col-span-2 glass-card p-6 border-t-4 border-gold">
+                    <h3 className="text-sm font-bold text-temple-800 uppercase mb-4">{t('dailyTimings')}</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                      <div className="p-3 bg-temple-50 rounded-xl">
+                        <span className="text-[10px] text-temple-500 font-bold uppercase">{t('morningAarti')}</span>
+                        <p className="text-sm font-extrabold text-saffron mt-0.5">05:30 AM</p>
+                      </div>
+                      <div className="p-3 bg-temple-50 rounded-xl">
+                        <span className="text-[10px] text-temple-500 font-bold uppercase">{t('noonBhoga')}</span>
+                        <p className="text-sm font-extrabold text-maroon mt-0.5">12:00 PM</p>
+                      </div>
+                      <div className="p-3 bg-temple-50 rounded-xl">
+                        <span className="text-[10px] text-temple-500 font-bold uppercase">{t('eveningAarti')}</span>
+                        <p className="text-sm font-extrabold text-saffron mt-0.5">06:30 PM</p>
+                      </div>
+                      <div className="p-3 bg-temple-50 rounded-xl">
+                        <span className="text-[10px] text-temple-500 font-bold uppercase">{t('closingTime')}</span>
+                        <p className="text-sm font-extrabold text-maroon mt-0.5">09:00 PM</p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Countdown & Notices Preview */}
+                <section className="py-12 bg-white border-t border-saffron/10">
+                  <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    
+                    {/* Notices Board */}
+                    <div className="glass-card p-6 border-l-4 border-saffron flex flex-col justify-between">
+                      <div>
+                        <h3 className="text-lg font-bold font-outfit text-maroon mb-4 flex items-center gap-1.5">
+                          <i className="fa-solid fa-bell text-saffron"></i>
+                          <span>Latest Announcements</span>
+                        </h3>
+                        <div className="space-y-3">
+                          {allNotices.slice(0, 2).map((n) => (
+                            <div key={n.id} className="p-3.5 bg-temple-50 rounded-xl border border-saffron/5 text-xs font-semibold">
+                              <div className="flex gap-2 text-[9px] text-temple-500">
+                                <span className="font-bold text-saffron">{n.category.toUpperCase()}</span>
+                                <span>{n.publishDate}</span>
+                              </div>
+                              <h4 className="font-bold text-temple-800 mt-1">{lang === 'or' ? n.titleOr : n.titleEn}</h4>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <button onClick={() => navigateTo('notices')} className="mt-4 text-center py-2 border border-saffron/30 hover:border-saffron text-saffron font-bold rounded-xl text-xs transition-colors">
+                        View Notice Board
+                      </button>
+                    </div>
+
+                    {/* Hundi card */}
+                    <div className="glass-card p-6 bg-gradient-to-br from-white to-gold/5 border-r-4 border-gold flex flex-col justify-between">
+                      <div>
+                        <span className="text-[9px] font-bold text-saffron uppercase tracking-wider">Digital Hundi</span>
+                        <h3 className="text-lg font-bold text-maroon font-outfit mt-0.5">Sponsor Daily Sevas & Maintenance</h3>
+                        <p className="text-xs text-temple-600 mt-2 leading-relaxed font-semibold">
+                          Every small contribution sustains the daily Kotha Bhoga and the stone boundary Meghnad Pacheri construction.
+                        </p>
+                      </div>
+                      <button onClick={() => navigateTo('donation')} className="mt-6 py-2.5 bg-saffron hover:bg-saffron-dark text-white font-bold rounded-xl text-xs shadow-md transition-colors w-full">
+                        Donate Digital Hundi
+                      </button>
+                    </div>
+
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {/* 2. ABOUT VIEW */}
+            {page === 'about' && (
+              <div className="animate-fadeIn max-w-5xl mx-auto px-4 py-12 space-y-12">
+                <div className="text-center">
+                  <h2 className="text-2xl md:text-3xl font-bold font-outfit text-maroon">About The Temple</h2>
+                  <div className="w-16 h-0.5 bg-gold mx-auto mt-2"></div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                  <div className="glass-card overflow-hidden rounded-xl h-64 bg-slate-200">
+                    <img src="assets/temple_exterior.png" className="w-full h-full object-cover" alt="Temple Exterior" />
+                  </div>
+                  <div className="text-xs md:text-sm text-temple-700 space-y-4 leading-relaxed font-semibold">
+                    <p>
+                      Nestled in the serene village of Siddheswar within the Digapahandi block of Ganjam district, Odisha, the Shree Jagannath Temple stands as a glowing center of devotion. Built to carry forward the centuries-old legacy of Jagannath culture, the temple has served as a spiritual sanctuary for Ganjam district.
+                    </p>
+                    <p>
+                      "Patita Pavan" literally translates to "The Redeemer of the Fallen." Lord Jagannath assumes this form to bestow his holy darshan upon everyone, transcending all barriers and backgrounds.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Deities info */}
+                <div className="bg-white p-6 rounded-xl border border-saffron/10 grid grid-cols-1 md:grid-cols-3 gap-6 text-center text-xs font-semibold">
+                  <div className="p-4 bg-temple-50 rounded-lg">
+                    <h4 className="font-bold text-temple-800 text-sm">Lord Balabhadra</h4>
+                    <p className="text-temple-600 mt-1">Elder brother, colored white. Represents infinite strength.</p>
+                  </div>
+                  <div className="p-4 bg-temple-50 rounded-lg">
+                    <h4 className="font-bold text-temple-800 text-sm">Devi Subhadra</h4>
+                    <p className="text-temple-600 mt-1">Sister, colored yellow. Represents energy and balance.</p>
+                  </div>
+                  <div className="p-4 bg-temple-50 rounded-lg">
+                    <h4 className="font-bold text-temple-800 text-sm">Lord Jagannath</h4>
+                    <p className="text-temple-600 mt-1">Universal Lord, colored black. Represents cosmic love.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 3. DARSHAN VIEW */}
+            {page === 'darshan' && (
+              <div className="animate-fadeIn max-w-4xl mx-auto px-4 py-12 space-y-8">
+                <div className="text-center">
+                  <h2 className="text-2xl md:text-3xl font-bold font-outfit text-maroon">Darshan & Aarti Timings</h2>
+                  <div className="w-16 h-0.5 bg-gold mx-auto mt-2"></div>
+                </div>
+
+                <div className="glass-card p-6 border-t-4 border-maroon overflow-hidden">
+                  <h3 className="text-sm font-bold text-temple-800 uppercase mb-4">Daily Schedule</h3>
+                  <div className="divide-y divide-saffron/5 text-xs md:text-sm font-semibold">
+                    <div className="py-2.5 flex justify-between"><span className="text-saffron">05:00 AM</span> <strong>Dwar Auda (Opening)</strong></div>
+                    <div className="py-2.5 flex justify-between"><span className="text-saffron">05:30 AM</span> <strong className="text-maroon">Mangala Aarti</strong></div>
+                    <div className="py-2.5 flex justify-between"><span className="text-saffron">08:00 AM</span> <strong>Gopal Bhoga Offering</strong></div>
+                    <div className="py-2.5 flex justify-between"><span className="text-saffron">08:30 AM - 12:00 PM</span> <strong>Morning Darshan</strong></div>
+                    <div className="py-2.5 flex justify-between"><span className="text-saffron">12:30 PM - 04:00 PM</span> <strong className="text-temple-500 font-bold">Pahada (Closed)</strong></div>
+                    <div className="py-2.5 flex justify-between"><span className="text-saffron">06:30 PM</span> <strong className="text-maroon">Sandhya Aarti</strong></div>
+                    <div className="py-2.5 flex justify-between"><span className="text-saffron">09:00 PM</span> <strong>Badasinghar Bhoga & Pahada</strong></div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 4. FESTIVALS VIEW */}
+            {page === 'festivals' && (
+              <div className="animate-fadeIn max-w-4xl mx-auto px-4 py-12 space-y-8">
+                <div className="text-center">
+                  <h2 className="text-2xl md:text-3xl font-bold font-outfit text-maroon">Festival Calendar</h2>
+                  <div className="w-16 h-0.5 bg-gold mx-auto mt-2"></div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Rath Yatra */}
+                  <div className="glass-card p-6 border-b-4 border-saffron space-y-3">
+                    <span className="text-[10px] font-bold text-saffron bg-saffron/10 px-2 py-0.5 rounded-full">July 16, 2026</span>
+                    <h3 className="font-bold text-sm text-temple-800">Rath Yatra Chariot Festival</h3>
+                    <p className="text-xs text-temple-600 font-semibold leading-relaxed">
+                      Lord Jagannath visits Gundicha temple on a grand wooden chariot pulled by thousands of devotees.
+                    </p>
+                  </div>
+
+                  {/* Snana Yatra */}
+                  <div className="glass-card p-6 border-b-4 border-gold space-y-3">
+                    <span className="text-[10px] font-bold text-gold-dark bg-gold/10 px-2 py-0.5 rounded-full">June 29, 2026</span>
+                    <h3 className="font-bold text-sm text-temple-800">Deba Snana Purnima</h3>
+                    <p className="text-xs text-temple-600 font-semibold leading-relaxed">
+                      Grand bathing ceremony where deities are bathed with 108 pots of herbal water, dressed in Hati Besha.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 5. SEVA BOOKING VIEW */}
+            {page === 'seva' && (
+              <SevaBookingPanel 
+                allSevas={allSevas} 
+                setAllSevas={setAllSevas} 
+                user={user} 
+                t={t}
+              />
+            )}
+
+            {/* 6. DONATION VIEW */}
+            {page === 'donation' && (
+              <DonationPanel 
+                allDonations={allDonations}
+                setAllDonations={setAllDonations}
+                user={user}
+                t={t}
+              />
+            )}
+
+            {/* 7. PRASAD VIEW */}
+            {page === 'prasad' && (
+              <PrasadPanel t={t} user={user} />
+            )}
+
+            {/* 8. GALLERY VIEW */}
+            {page === 'gallery' && (
+              <GalleryPanel allGallery={allGallery} setAllGallery={setAllGallery} user={user} />
+            )}
+
+            {/* 9. NOTICES VIEW */}
+            {page === 'notices' && (
+              <NoticesPanel allNotices={allNotices} lang={lang} />
+            )}
+
+            {/* 10. VISIT VIEW */}
+            {page === 'visit' && (
+              <div className="animate-fadeIn max-w-4xl mx-auto px-4 py-12 space-y-8">
+                <div className="text-center">
+                  <h2 className="text-2xl md:text-3xl font-bold font-outfit text-maroon">Plan Your Visit</h2>
+                  <div className="w-16 h-0.5 bg-gold mx-auto mt-2"></div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs font-semibold">
+                  <div className="glass-card p-5 space-y-2">
+                    <h4 className="font-bold text-temple-900">From Digapahandi</h4>
+                    <p className="text-temple-600">4 km away from bus stand. Auto-rickshaws available round the clock.</p>
+                  </div>
+                  <div className="glass-card p-5 space-y-2">
+                    <h4 className="font-bold text-temple-900">From Brahmapur</h4>
+                    <p className="text-temple-600">30 km distance. Regular private & government OSRTC buses run frequently.</p>
+                  </div>
+                  <div className="glass-card p-5 space-y-2">
+                    <h4 className="font-bold text-temple-900">Accommodations</h4>
+                    <p className="text-temple-600">Trust-run clean Dharamshala rooms are available at budget rates.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 11. CONTACT VIEW */}
+            {page === 'contact' && (
+              <ContactPanel allTickets={allTickets} setAllTickets={setAllTickets} />
+            )}
+
+            {/* 12. LOGIN VIEW */}
+            {page === 'login' && (
+              <LoginPanel setUser={setUser} navigateTo={navigateTo} t={t} />
+            )}
+
+            {/* 13. REGISTER VIEW */}
+            {page === 'register' && (
+              <RegisterPanel setUser={setUser} navigateTo={navigateTo} />
+            )}
+
+            {/* 14. USER PROFILE VIEW */}
+            {page === 'profile' && (
+              <UserProfilePanel 
+                user={user} 
+                setUser={setUser} 
+                navigateTo={navigateTo}
+                allSevas={allSevas}
+                allDonations={allDonations}
+              />
+            )}
+
+            {/* 15. ADMIN DASHBOARD VIEW */}
+            {page === 'admin' && (
+              <AdminDashboardPanel 
+                user={user}
+                allSevas={allSevas}
+                setAllSevas={setAllSevas}
+                allDonations={allDonations}
+                allNotices={allNotices}
+                setAllNotices={setAllNotices}
+                allFaqs={allFaqs}
+                setAllFaqs={setAllFaqs}
+                allTickets={allTickets}
+                setAllTickets={setAllTickets}
+                allGallery={allGallery}
+                setAllGallery={setAllGallery}
+              />
+            )}
+
+          </main>
+
+          {/* GLOBAL FOOTER */}
+          <footer className="bg-temple-dark text-cream-light pt-12 pb-6 border-t border-gold">
+            <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 text-xs text-temple-200">
+              
+              <div className="space-y-3">
+                <h3 className="font-bold text-gold uppercase">{t('templeName')}</h3>
+                <p className="leading-relaxed">Jai Jagannath. May the Lord of the Universe bless humanity with harmony, wisdom, and infinite peace.</p>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="font-bold text-gold uppercase">Contact Details</h3>
+                <p>9JMV+VVC, Sidhaswar, Odisha 761054</p>
+                 <p>Helpline: +91 94371 XXXXX | Emergency: +91 93378 22942</p>
+              </div>
+
+              <div className="bg-maroon-dark/50 p-4 border border-saffron/20 rounded-xl space-y-2">
+                <h4 className="font-bold text-gold uppercase flex items-center gap-1">
+                  <i className="fa-solid fa-triangle-exclamation animate-pulse"></i>
+                  <span>Payment Security Warning</span>
+                </h4>
+                <p className="text-[10px] leading-relaxed text-cream-light/85">
+                  Do not transfer donation funds to personal bank accounts. Use only verified digital payment portals or QR codes.
+                </p>
+              </div>
+
+            </div>
+            
+            <div className="border-t border-white/10 mt-8 pt-6 max-w-7xl mx-auto px-4 text-center text-[10px] text-temple-400">
+              &copy; 2026 Shree Jagannath Temple Trust, Siddheswar. All Rights Reserved.
+            </div>
+          </footer>
+
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // SEVA BOOKING PORTAL SUB-COMPONENT
+    // =========================================================================
+    function SevaBookingPanel({ allSevas, setAllSevas, user, t }) {
+      const [sevaType, setSevaType] = useState('Annadan Seva (Mahaprasad)');
+      const [devoteeName, setDevoteeName] = useState(user ? user.name : '');
+      const [phone, setPhone] = useState(user ? user.phone : '');
+      const [email, setEmail] = useState(user ? user.email : '');
+      const [gotra, setGotra] = useState(user ? user.gotra || '' : '');
+      const [address, setAddress] = useState(user ? user.address || '' : '');
+      const [selectedDate, setSelectedDate] = useState('');
+      const [familyMembers, setFamilyMembers] = useState('');
+      const [loading, setLoading] = useState(false);
+      const [success, setSuccess] = useState(null);
+
+      const handleBook = (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        setTimeout(() => {
+          setLoading(false);
+          const refNum = `SEVA-761012-${Math.floor(1000 + Math.random() * 9000)}`;
+          const newBooking = {
+            id: `sev_${Date.now()}`,
+            bookingReference: refNum,
+            devoteeName,
+            phone,
+            email,
+            gotra,
+            address,
+            selectedDate,
+            sevaType,
+            amount: sevaType.includes('Annadan') ? 1100 : 501,
+            paymentStatus: "paid",
+            approvalStatus: "pending",
+            createdAt: new Date().toISOString()
+          };
+
+          const list = [newBooking, ...allSevas];
+          setAllSevas(list);
+          localStorage.setItem('preview-sevas', JSON.stringify(list));
+          setSuccess(newBooking);
+        }, 500);
+      };
+
+      const downloadMockReceipt = (bk) => {
+        const text = `========================================================
+SEVA BOOKING SLIP - SIDHESWAR TEMPLE
+========================================================
+Ref Code:        ${bk.bookingReference}
+Devotee Name:    ${bk.devoteeName}
+Phone Number:    ${bk.phone}
+Gotra:           ${bk.gotra || "N/A"}
+Auspicious Date: ${bk.selectedDate}
+Seva Category:   ${bk.sevaType}
+Contribution:    INR ${bk.amount}/-
+Payment Status:  PAID (UPI QR Code)
+Approval Status: PENDING TRUST CONFIRMATION
+========================================================`;
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `${bk.bookingReference}_slip.txt`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      return (
+        <div className="animate-fadeIn max-w-2xl mx-auto px-4 py-12">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold font-outfit text-maroon">Online Seva Booking</h2>
+            <div className="w-16 h-0.5 bg-gold mx-auto mt-2"></div>
+          </div>
+
+          {!success ? (
+            <form onSubmit={handleBook} className="glass-card p-6 space-y-4 border-t-4 border-saffron box-glow text-xs font-semibold">
+              <div className="p-3.5 bg-gold/15 border border-gold/30 rounded-xl flex gap-2">
+                <i className="fa-solid fa-triangle-exclamation text-saffron mt-0.5"></i>
+                <p className="text-[10px] text-temple-800 leading-normal">
+                  Disclaimer: Seva booking is confirmed only after temple trust board approval. Present digital receipt at the office.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex flex-col space-y-1 col-span-1 sm:col-span-2">
+                  <label className="text-temple-700">Seva Category</label>
+                  <select 
+                    value={sevaType} 
+                    onChange={(e) => setSevaType(e.target.value)}
+                    className="px-3 py-2.5 bg-temple-50 border border-saffron/20 rounded-xl"
+                  >
+                    <option value="Annadan Seva (Mahaprasad)">Annadan Seva (Mahaprasad) - ₹1100</option>
+                    <option value="Pushpalankara & Daily Puja">Pushpalankara & Daily Puja - ₹501</option>
+                    <option value="Khadya Dry Bhoga Offering">Khadya Dry Bhoga Offering - ₹251</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col space-y-1">
+                  <label className="text-temple-700">Devotee Name</label>
+                  <input type="text" required value={devoteeName} onChange={(e) => setDevoteeName(e.target.value)} className="px-3 py-2.5 bg-temple-50 border border-saffron/20 rounded-xl" />
+                </div>
+                <div className="flex flex-col space-y-1">
+                  <label className="text-temple-700">Auspicious Date</label>
+                  <input type="date" required value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="px-3 py-2.5 bg-temple-50 border border-saffron/20 rounded-xl" />
+                </div>
+                <div className="flex flex-col space-y-1">
+                  <label className="text-temple-700">Mobile Number</label>
+                  <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} className="px-3 py-2.5 bg-temple-50 border border-saffron/20 rounded-xl" />
+                </div>
+                <div className="flex flex-col space-y-1">
+                  <label className="text-temple-700">Email Address</label>
+                  <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="px-3 py-2.5 bg-temple-50 border border-saffron/20 rounded-xl" />
+                </div>
+                <div className="flex flex-col space-y-1">
+                  <label className="text-temple-700">Gotra</label>
+                  <input type="text" value={gotra} onChange={(e) => setGotra(e.target.value)} placeholder="e.g. Kashyap" className="px-3 py-2.5 bg-temple-50 border border-saffron/20 rounded-xl" />
+                </div>
+                <div className="flex flex-col space-y-1">
+                  <label className="text-temple-700">Address</label>
+                  <input type="text" required value={address} onChange={(e) => setAddress(e.target.value)} placeholder="City, State" className="px-3 py-2.5 bg-temple-50 border border-saffron/20 rounded-xl" />
+                </div>
+              </div>
+
+              <button type="submit" disabled={loading} className="w-full py-3 bg-saffron text-white rounded-xl font-bold shadow-md">
+                {loading ? 'Processing Seva...' : 'Submit Seva Request'}
+              </button>
+            </form>
+          ) : (
+            <div className="glass-card p-8 border-t-4 border-emerald-600 space-y-5 text-center box-glow">
+              <i className="fa-solid fa-circle-check text-4xl text-emerald-600 animate-pulse"></i>
+              <h3 className="text-xl font-bold text-emerald-800">Booking Initiated Successfully!</h3>
+              
+              <div className="p-4 bg-temple-50 border border-saffron/10 rounded-xl text-left max-w-sm mx-auto space-y-2 text-xs font-semibold">
+                <p className="flex justify-between"><span className="text-temple-500">Ref Code:</span> <strong>{success.bookingReference}</strong></p>
+                <p className="flex justify-between"><span className="text-temple-500">Devotee:</span> <span>{success.devoteeName}</span></p>
+                <p className="flex justify-between"><span className="text-temple-500">Category:</span> <span>{success.sevaType}</span></p>
+                <p className="flex justify-between"><span className="text-temple-500">Date:</span> <span>{success.selectedDate}</span></p>
+                <p className="flex justify-between"><span className="text-temple-500">Amount:</span> <strong className="text-maroon">₹{success.amount}</strong></p>
+              </div>
+
+              <div className="flex gap-3 justify-center text-xs font-bold">
+                <button onClick={() => downloadMockReceipt(success)} className="px-4 py-2.5 bg-maroon text-cream-light rounded-xl flex items-center gap-1"><i className="fa-solid fa-file-arrow-down"></i> Download Slip</button>
+                <button onClick={() => setSuccess(null)} className="px-4 py-2.5 border border-saffron text-saffron rounded-xl">Book Another</button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // DONATION PORTAL SUB-COMPONENT
+    // =========================================================================
+    function DonationPanel({ allDonations, setAllDonations, user, t }) {
+      const [amount, setAmount] = useState(1100);
+      const [custom, setCustom] = useState('');
+      const [donorName, setDonorName] = useState(user ? user.name : '');
+      const [phone, setPhone] = useState(user ? user.phone : '');
+      const [email, setEmail] = useState(user ? user.email : '');
+      const [category, setCategory] = useState('general_fund');
+      const [panNumber, setPanNumber] = useState('');
+      const [isAnonymous, setIsAnonymous] = useState(false);
+      const [loading, setLoading] = useState(false);
+      const [success, setSuccess] = useState(null);
+
+      const handlePreset = (val) => {
+        setAmount(val);
+        setCustom('');
+      };
+
+      const handleCustom = (e) => {
+        setCustom(e.target.value);
+        setAmount(Number(e.target.value) || 0);
+      };
+
+      const handleDonate = (e) => {
+        e.preventDefault();
+        if (amount <= 0) return;
+        setLoading(true);
+
+        setTimeout(() => {
+          setLoading(false);
+          const txnId = `TXN${Math.floor(100000000000 + Math.random() * 900000000000)}`;
+          const receiptNum = `RECEIPT-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+          
+          const newDonation = {
+            id: `don_${Date.now()}`,
+            donorName: isAnonymous ? 'Anonymous Devotee' : donorName || 'Devotee',
+            email,
+            phone,
+            panNumber,
+            amount,
+            category,
+            isAnonymous,
+            paymentGateway: 'UPI',
+            transactionId: txnId,
+            receiptNumber: receiptNum,
+            date: new Date().toISOString()
+          };
+
+          const list = [newDonation, ...allDonations];
+          setAllDonations(list);
+          localStorage.setItem('preview-donations', JSON.stringify(list));
+          setSuccess(newDonation);
+        }, 500);
+      };
+
+      const downloadDonationReceipt = (don) => {
+        const text = `========================================================
+HUNDI DONATION SLIP - SIDHESWAR TEMPLE
+========================================================
+Receipt No:     ${don.receiptNumber}
+Transaction ID: ${don.transactionId}
+Donor Name:     ${don.donorName}
+PAN Card:       ${don.panNumber || "N/A"}
+Category:       ${don.category.replace(/_/g, ' ').toUpperCase()}
+Amount:         INR ${don.amount}/-
+Payment Mode:   UPI Gateway
+Date:           ${new Date(don.date).toLocaleString()}
+========================================================`;
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `${don.receiptNumber}_slip.txt`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      return (
+        <div className="animate-fadeIn max-w-4xl mx-auto px-4 py-12">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold font-outfit text-maroon">Digital Hundi Contributions</h2>
+            <div className="w-16 h-0.5 bg-gold mx-auto mt-2"></div>
+          </div>
+
+          {!success ? (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              
+              {/* Form */}
+              <form onSubmit={handleDonate} className="lg:col-span-2 glass-card p-6 border-t-4 border-saffron space-y-4 box-glow text-xs font-semibold">
+                
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex gap-2">
+                  <i className="fa-solid fa-shield-halved text-rose-700 mt-0.5 animate-pulse"></i>
+                  <p className="text-[10px] text-rose-800 leading-normal font-bold">
+                    Do not transfer funds to personal phone numbers. Verify bank details.
+                  </p>
+                </div>
+
+                {/* Presets */}
+                <div className="space-y-1.5">
+                  <label className="text-temple-700">Select Donation Amount (INR)</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[501, 1100, 2500, 5001].map(v => (
+                      <button key={v} type="button" onClick={() => handlePreset(v)} className={`py-2 text-center border font-outfit text-xs font-bold rounded-lg ${
+                        amount === v && !custom ? 'bg-saffron text-white border-saffron shadow-sm' : 'bg-temple-50 border-saffron/10 text-temple-800 hover:bg-saffron/5'
+                      }`}>₹{v}</button>
+                    ))}
+                  </div>
+                  <input type="number" value={custom} onChange={handleCustom} placeholder="Or enter custom amount" className="w-full px-3 py-2 bg-temple-50 border border-saffron/20 rounded-xl focus:outline-none" />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col space-y-1 col-span-1 sm:col-span-2">
+                    <label className="text-temple-700">Donation Purpose</label>
+                    <select value={category} onChange={(e) => setCategory(e.target.value)} className="px-3 py-2.5 bg-temple-50 border border-saffron/20 rounded-xl focus:outline-none">
+                      <option value="general_fund">General Temple Fund</option>
+                      <option value="anna_daan">Anna Daan Seva (Feeding Pilgrims)</option>
+                      <option value="construction_fund">Temple Boundary Construction (Meghnad Pacheri)</option>
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col space-y-1">
+                    <label className="text-temple-700">Donor Name</label>
+                    <input type="text" disabled={isAnonymous} value={isAnonymous ? '' : donorName} onChange={(e) => setDonorName(e.target.value)} placeholder={isAnonymous ? 'Anonymous' : 'Name'} className="px-3 py-2.5 bg-temple-50 border border-saffron/20 rounded-xl focus:outline-none disabled:opacity-50" />
+                  </div>
+                  <div className="flex flex-col space-y-1">
+                    <label className="text-temple-700">PAN Number (Optional for Tax Rebate)</label>
+                    <input type="text" maxLength={10} value={panNumber} onChange={(e) => setPanNumber(e.target.value.toUpperCase())} placeholder="PAN ID" className="px-3 py-2.5 bg-temple-50 border border-saffron/20 rounded-xl focus:outline-none uppercase" />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="anonCheck" checked={isAnonymous} onChange={(e) => setIsAnonymous(e.target.checked)} className="w-4 h-4 text-saffron accent-saffron cursor-pointer" />
+                  <label htmlFor="anonCheck" className="cursor-pointer select-none text-[10px] uppercase font-bold text-temple-700">Make contribution anonymous</label>
+                </div>
+
+                <button type="submit" disabled={loading || amount <= 0} className="w-full py-3 bg-saffron hover:bg-saffron-dark text-white font-bold rounded-xl shadow-md transition-colors text-xs flex items-center justify-center gap-1.5">
+                  <i className="fa-solid fa-qrcode"></i>
+                  <span>Generate Payment QR & Complete</span>
+                </button>
+              </form>
+
+              {/* Side logs */}
+              <div className="space-y-4 text-xs font-semibold">
+                <div className="glass-card p-5 border-t-4 border-gold space-y-3 shadow-sm">
+                  <h4 className="font-bold text-temple-900 border-b pb-2"><i className="fa-solid fa-building-columns text-gold"></i> Official Bank details</h4>
+                  <div className="space-y-1 text-temple-600">
+                    <p>SBI Digapahandi Branch</p>
+                    <p>A/C: 40012345678 (Verified)</p>
+                    <p>IFSC: SBIN0001234</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          ) : (
+            <div className="glass-card p-8 border-t-4 border-emerald-600 space-y-5 text-center box-glow">
+              <i className="fa-solid fa-circle-check text-4xl text-emerald-600 animate-pulse"></i>
+              <h3 className="text-xl font-bold text-emerald-800">Donation Confirmed!</h3>
+              
+              <div className="p-4 bg-temple-50 border border-saffron/10 rounded-xl text-left max-w-sm mx-auto space-y-2 text-xs font-semibold">
+                <p className="flex justify-between"><span className="text-temple-500">Receipt No:</span> <strong>{success.receiptNumber}</strong></p>
+                <p className="flex justify-between"><span className="text-temple-500">Donor Name:</span> <span>{success.donorName}</span></p>
+                <p className="flex justify-between"><span className="text-temple-500">Amount:</span> <strong className="text-maroon">₹{success.amount}</strong></p>
+                <p className="flex justify-between"><span className="text-temple-500">txnId:</span> <span className="font-mono text-[10px]">{success.transactionId}</span></p>
+              </div>
+
+              <div className="flex gap-3 justify-center text-xs font-bold">
+                <button onClick={() => downloadDonationReceipt(success)} className="px-4 py-2.5 bg-maroon text-cream-light rounded-xl flex items-center gap-1"><i className="fa-solid fa-file-arrow-down"></i> Download Receipt</button>
+                <button onClick={() => setSuccess(null)} className="px-4 py-2.5 border border-saffron text-saffron rounded-xl">Donate Again</button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // PRASAD PANEL SUB-COMPONENT
+    // =========================================================================
+    function PrasadPanel({ t, user }) {
+      const [name, setName] = useState(user ? user.name : '');
+      const [phone, setPhone] = useState(user ? user.phone : '');
+      const [selectedDate, setSelectedDate] = useState('');
+      const [headcount, setHeadcount] = useState(20);
+      const [prasadType, setPrasadType] = useState('Full Mahaprasad Meal');
+      const [loading, setLoading] = useState(false);
+      const [success, setSuccess] = useState(null);
+
+      const handleRequest = (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setTimeout(() => {
+          setLoading(false);
+          setSuccess({
+            referenceCode: `PRASD-REQ-${Math.floor(100000 + Math.random() * 900000)}`,
+            headcount,
+            selectedDate,
+            prasadType
+          });
+        }, 500);
+      };
+
+      return (
+        <div className="animate-fadeIn max-w-4xl mx-auto px-4 py-12 space-y-10">
+          <div className="text-center">
+            <h2 className="text-2xl md:text-3xl font-bold font-outfit text-maroon">Prasad / Bhoga Information</h2>
+            <div className="w-16 h-0.5 bg-gold mx-auto mt-2"></div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            
+            {/* Menu */}
+            <div className="glass-card p-6 border-t-4 border-maroon space-y-4">
+              <h3 className="text-base font-bold text-temple-800 border-b pb-2">Daily Bhoga Price Chart</h3>
+              <div className="space-y-3 text-xs font-semibold">
+                <div className="flex justify-between p-2.5 bg-temple-50 rounded-lg"><span>Dry Khaja Sweet Pack (ଶୁଖିଲା ଖଜା)</span> <strong className="text-maroon">₹50/pack</strong></div>
+                <div className="flex justify-between p-2.5 bg-temple-50 rounded-lg"><span>Meetha Kanika sweet rice (ମିଠା କାନିକା)</span> <strong className="text-maroon">₹100/kudua</strong></div>
+                <div className="flex justify-between p-2.5 bg-temple-50 rounded-lg"><span>Traditional Dalma stew (ଡାଲମା)</span> <strong className="text-maroon">₹80/kudua</strong></div>
+                <div className="flex justify-between p-2.5 bg-temple-50 rounded-lg"><span>Anna Prasad rice (ଅନ୍ନ ପ୍ରସାଦ)</span> <strong className="text-maroon">₹70/kudua</strong></div>
+              </div>
+            </div>
+
+            {/* Request Form */}
+            <div className="glass-card p-6 border-t-4 border-saffron box-glow text-xs font-semibold">
+              {!success ? (
+                <form onSubmit={handleRequest} className="space-y-4">
+                  <h3 className="text-base font-bold text-temple-800">Group Prasad Order Form</h3>
+                  <p className="text-[10px] text-temple-500 font-semibold -mt-2">Minimum group size: 10 pilgrims. Submit 48 hrs in advance.</p>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col space-y-1">
+                      <label className="text-temple-700">Contact Person</label>
+                      <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className="px-3 py-2 bg-temple-50 border border-saffron/20 rounded-lg focus:outline-none" />
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <label className="text-temple-700">Mobile Number</label>
+                      <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} className="px-3 py-2 bg-temple-50 border border-saffron/20 rounded-lg focus:outline-none" />
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <label className="text-temple-700">Devotee Count</label>
+                      <input type="number" required min={10} value={headcount} onChange={(e) => setHeadcount(Number(e.target.value))} className="px-3 py-2 bg-temple-50 border border-saffron/20 rounded-lg focus:outline-none" />
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <label className="text-temple-700">Auspicious Date</label>
+                      <input type="date" required value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="px-3 py-2 bg-temple-50 border border-saffron/20 rounded-lg focus:outline-none" />
+                    </div>
+                  </div>
+
+                  <button type="submit" disabled={loading} className="w-full py-2.5 bg-saffron text-white font-bold rounded-lg">
+                    {loading ? 'Requesting...' : 'Submit Group Order'}
+                  </button>
+                </form>
+              ) : (
+                <div className="text-center space-y-4 py-4">
+                  <i className="fa-solid fa-circle-check text-3xl text-emerald-600 animate-pulse"></i>
+                  <h4 className="font-bold text-emerald-800 text-sm">Prasad Request Submitted</h4>
+                  <div className="p-3 bg-temple-50 rounded-xl border border-saffron/10 text-left space-y-1 font-semibold max-w-xs mx-auto text-[11px]">
+                    <p className="flex justify-between"><span>Ref Code:</span> <strong className="text-saffron">{success.referenceCode}</strong></p>
+                    <p className="flex justify-between"><span>Count:</span> <span>{success.headcount} Devotees</span></p>
+                    <p className="flex justify-between"><span>Date:</span> <span>{success.selectedDate}</span></p>
+                  </div>
+                  <p className="text-[10px] text-amber-800 bg-amber-50 p-2.5 rounded-lg font-bold">
+                    Important: Deposit 50% advance at the office counter within 24 hrs to secure clay pots booking.
+                  </p>
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // GALLERY PANEL SUB-COMPONENT
+    // =========================================================================
+    function GalleryPanel({ allGallery, setAllGallery, user }) {
+      const [filter, setFilter] = useState('all');
+      const [lightboxIdx, setLightboxIdx] = useState(-1);
+      const [uploadOpen, setUploadOpen] = useState(false);
+      const [title, setTitle] = useState('');
+      const [url, setUrl] = useState('');
+      const [cat, setCat] = useState('events');
+      const [msg, setMsg] = useState('');
+
+      const filtered = filter === 'all' ? allGallery : allGallery.filter(item => item.category === filter);
+
+      const handleUpload = (e) => {
+        e.preventDefault();
+        if (!url) return;
+        
+        const isApproved = user && user.role !== 'devotee';
+        const newItem = {
+          id: `gal_${Date.now()}`,
+          titleEn: title,
+          category: cat,
+          type: 'image',
+          url,
+          isApproved,
+          uploadedBy: user ? user.name : 'Anonymous Devotee'
+        };
+
+        const updated = [...allGallery, newItem];
+        setAllGallery(updated);
+        localStorage.setItem('preview-gallery', JSON.stringify(updated));
+
+        if (isApproved) {
+          setMsg("Photo uploaded successfully!");
+        } else {
+          setMsg("Devotee photo submitted to administrator queue successfully!");
+        }
+        setTitle('');
+        setUrl('');
+        setTimeout(() => { setMsg(''); setUploadOpen(false); }, 3000);
+      };
+
+      return (
+        <div className="animate-fadeIn max-w-5xl mx-auto px-4 py-12 space-y-8">
+          <div className="text-center">
+            <h2 className="text-2xl md:text-3xl font-bold font-outfit text-maroon">Temple Photo Gallery</h2>
+            <div className="w-16 h-0.5 bg-gold mx-auto mt-2"></div>
+          </div>
+
+          <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-[10px] md:text-xs rounded-xl font-bold flex gap-2">
+            <i className="fa-solid fa-circle-exclamation text-saffron mt-0.5"></i>
+            <span>Warning: Photography or videography of restricted inner rituals is strictly not allowed inside the sanctum.</span>
+          </div>
+
+          {/* Filters & action */}
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div className="flex gap-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 text-xs font-bold font-outfit no-scrollbar">
+              {['all', 'deities', 'temple_architecture', 'festivals', 'events'].map(f => (
+                <button key={f} onClick={() => setFilter(f)} className={`px-4 py-1.5 rounded-full border whitespace-nowrap capitalize ${
+                  filter === f ? 'bg-saffron border-saffron text-white shadow-sm' : 'bg-white border-saffron/15 text-temple-800 hover:bg-saffron/5'
+                }`}>{f.replace('_', ' ')}</button>
+              ))}
+            </div>
+
+            <button onClick={() => setUploadOpen(true)} className="px-4 py-2 bg-maroon hover:bg-maroon-light text-cream-light font-bold text-xs rounded-xl flex items-center gap-1.5 shrink-0 shadow-md">
+              <i className="fa-solid fa-plus-circle"></i>
+              <span>Contribute Photo</span>
+            </button>
+          </div>
+
+          {/* Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+            {filtered.filter(i => i.isApproved).map((item, idx) => (
+              <div key={item.id} onClick={() => setLightboxIdx(idx)} className="h-44 md:h-52 bg-slate-200 rounded-xl overflow-hidden shadow-sm relative group cursor-pointer border border-saffron/5">
+                <img src={item.url} alt={item.titleEn} className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500" />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3 text-white text-[10px] font-bold">
+                  <span>{item.titleEn}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Lightbox */}
+          {lightboxIdx >= 0 && filtered[lightboxIdx] && (
+            <div className="fixed inset-0 bg-black/95 z-55 flex flex-col items-center justify-center p-4">
+              <button onClick={() => setLightboxIdx(-1)} className="absolute top-6 right-6 text-white hover:text-gold text-2xl z-55">&times;</button>
+              <img src={filtered[lightboxIdx].url} className="max-h-[80vh] max-w-full object-contain rounded-lg" />
+              <p className="text-white text-xs font-bold mt-4">{filtered[lightboxIdx].titleEn}</p>
+            </div>
+          )}
+
+          {/* Devotee upload modal */}
+          {uploadOpen && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <form onSubmit={handleUpload} className="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 border border-gold/25 box-glow text-xs font-semibold">
+                <div className="flex justify-between items-center border-b pb-2">
+                  <h4 className="text-sm font-bold text-maroon">Contribute Gallery Photo</h4>
+                  <button type="button" onClick={() => setUploadOpen(false)} className="text-lg font-bold">&times;</button>
+                </div>
+                <div className="flex flex-col space-y-1">
+                  <label className="text-temple-700">Photo Title</label>
+                  <input type="text" required value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Altar Decoration" className="px-3 py-2 bg-temple-50 border border-saffron/20 rounded-lg focus:outline-none" />
+                </div>
+                <div className="flex flex-col space-y-1">
+                  <label className="text-temple-700">Category</label>
+                  <select value={cat} onChange={(e) => setCat(e.target.value)} className="px-3 py-2 bg-temple-50 border border-saffron/20 rounded-lg focus:outline-none">
+                    <option value="deities">Deities (ଶ୍ରୀବିଗ୍ରହ)</option>
+                    <option value="temple_architecture">Architecture</option>
+                    <option value="events">Community Event</option>
+                  </select>
+                </div>
+                <div className="flex flex-col space-y-1">
+                  <label className="text-temple-700">Web Image URL Link</label>
+                  <input type="url" required value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://i.imgur.com/example.png" className="px-3 py-2 bg-temple-50 border border-saffron/20 rounded-lg focus:outline-none" />
+                </div>
+
+                {msg && <p className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] rounded-lg font-bold">{msg}</p>}
+
+                <div className="pt-2 flex justify-end gap-2 text-[10px]">
+                  <button type="button" onClick={() => setUploadOpen(false)} className="px-3 py-1.5 border border-saffron text-saffron rounded-lg font-bold">Cancel</button>
+                  <button type="submit" className="px-4 py-1.5 bg-saffron text-white rounded-lg font-bold">Submit Photo</button>
+                </div>
+              </form>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // NOTICES BOARD SUB-COMPONENT
+    // =========================================================================
+    function NoticesPanel({ allNotices, lang }) {
+      return (
+        <div className="animate-fadeIn max-w-4xl mx-auto px-4 py-12 space-y-8">
+          <div className="text-center">
+            <h2 className="text-2xl md:text-3xl font-bold font-outfit text-maroon">Live Notices Board</h2>
+            <div className="w-16 h-0.5 bg-gold mx-auto mt-2"></div>
+          </div>
+
+          <div className="space-y-6">
+            {allNotices.map((n) => (
+              <div key={n.id} className={`glass-card p-6 border-l-4 box-glow ${n.isPinned ? 'border-gold bg-gold/5' : 'border-saffron'}`}>
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-saffron/10 text-saffron rounded-full shrink-0"><i className="fa-solid fa-bullhorn text-sm"></i></div>
+                  <div className="flex-1 space-y-2 text-xs font-semibold">
+                    <div className="flex gap-2 text-[9px] text-temple-500">
+                      <span className="bg-temple-100 px-2 py-0.5 rounded-full">{n.category.toUpperCase()}</span>
+                      <span>Published: {n.publishDate}</span>
+                    </div>
+                    <h3 className="text-base font-bold text-temple-900">{lang === 'or' ? n.titleOr : n.titleEn}</h3>
+                    <p className="text-temple-600 leading-relaxed font-semibold">{n.contentEn}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // CONTACT & GRIEVANCE SUB-COMPONENT
+    // =========================================================================
+    function ContactPanel({ allTickets, setAllTickets }) {
+      const [name, setName] = useState('');
+      const [email, setEmail] = useState('');
+      const [phone, setPhone] = useState('');
+      const [type, setType] = useState('general_inquiry');
+      const [subject, setSubject] = useState('');
+      const [message, setMessage] = useState('');
+      const [loading, setLoading] = useState(false);
+      const [success, setSuccess] = useState(null);
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        setTimeout(() => {
+          setLoading(false);
+          const tktNo = `TKT-${Math.floor(100000 + Math.random() * 900000)}`;
+          const newTicket = {
+            id: `tkt_${Date.now()}`,
+            ticketNumber: tktNo,
+            type,
+            name,
+            email,
+            phone,
+            subject,
+            message,
+            status: "open",
+            createdAt: new Date().toISOString()
+          };
+
+          const list = [newTicket, ...allTickets];
+          setAllTickets(list);
+          localStorage.setItem('preview-tickets', JSON.stringify(list));
+          setSuccess(newTicket);
+        }, 500);
+      };
+
+      return (
+        <div className="animate-fadeIn max-w-4xl mx-auto px-4 py-12 space-y-8">
+          <div className="text-center">
+            <h2 className="text-2xl md:text-3xl font-bold font-outfit text-maroon">Contact & Grievance Panel</h2>
+            <div className="w-16 h-0.5 bg-gold mx-auto mt-2"></div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="glass-card p-6 border-t-4 border-maroon space-y-4 text-xs font-semibold">
+              <h4 className="font-bold text-temple-900 text-sm">Temple Office Contacts</h4>
+              <p className="text-temple-600"><i className="fa-solid fa-phone text-saffron shrink-0"></i> Helpline: +91 94371 XXXXX</p>
+              <p className="text-temple-600"><i className="fa-solid fa-envelope text-saffron shrink-0"></i> Email: trust@siddheswarjagannath.org</p>
+              <p className="text-temple-600"><i className="fa-solid fa-clock text-saffron shrink-0"></i> Office: 9 AM - 12 PM, 5 PM - 8 PM</p>
+            </div>
+
+            <div className="lg:col-span-2 glass-card p-6 border-t-4 border-saffron box-glow text-xs font-semibold">
+              {!success ? (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <h3 className="font-bold text-sm text-temple-800">Submit Inquiries / Fraud Report / Grievances</h3>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col space-y-1 col-span-1 sm:col-span-2">
+                      <label className="text-temple-700">Form Category</label>
+                      <select value={type} onChange={(e) => setType(e.target.value)} className="px-3 py-2 bg-temple-50 border border-saffron/20 rounded-lg focus:outline-none">
+                        <option value="general_inquiry">General Inquiry</option>
+                        <option value="grievance">Grievance / Complaint</option>
+                        <option value="lost_found">Lost & Found Report</option>
+                        <option value="fraud_report">Report Payment Fraud</option>
+                      </select>
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <label className="text-temple-700">Full Name</label>
+                      <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className="px-3 py-2 bg-temple-50 border border-saffron/20 rounded-lg focus:outline-none" />
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <label className="text-temple-700">Mobile Number</label>
+                      <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} className="px-3 py-2 bg-temple-50 border border-saffron/20 rounded-lg focus:outline-none" />
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <label className="text-temple-700">Email Address</label>
+                      <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="px-3 py-2 bg-temple-50 border border-saffron/20 rounded-lg focus:outline-none" />
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <label className="text-temple-700">Subject</label>
+                      <input type="text" required value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Summary" className="px-3 py-2 bg-temple-50 border border-saffron/20 rounded-lg focus:outline-none" />
+                    </div>
+                    <div className="flex flex-col space-y-1 col-span-1 sm:col-span-2">
+                      <label className="text-temple-700">Detailed Message</label>
+                      <textarea rows={3} required value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Write details..." className="px-3 py-2 bg-temple-50 border border-saffron/20 rounded-lg focus:outline-none resize-none" />
+                    </div>
+                  </div>
+
+                  <button type="submit" disabled={loading} className="w-full py-2.5 bg-saffron hover:bg-saffron-dark text-white font-bold rounded-xl shadow-md transition-colors">
+                    {loading ? 'Submitting...' : 'Submit Support Ticket'}
+                  </button>
+                </form>
+              ) : (
+                <div className="text-center space-y-4 py-6">
+                  <i className="fa-solid fa-circle-check text-3xl text-emerald-600 animate-pulse"></i>
+                  <h4 className="font-bold text-emerald-800 text-sm">Ticket Raised Successfully</h4>
+                  <div className="p-3 bg-temple-50 rounded-xl border border-saffron/10 text-left space-y-1.5 font-semibold max-w-xs mx-auto text-[11px]">
+                    <p className="flex justify-between"><span>Ticket No:</span> <strong className="text-saffron">{success.ticketNumber}</strong></p>
+                    <p className="flex justify-between"><span>Category:</span> <span className="capitalize">{success.type.replace(/_/g, ' ')}</span></p>
+                  </div>
+                  <button onClick={() => setSuccess(null)} className="px-4 py-1.5 border border-saffron text-saffron rounded-lg">Submit Another</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // LOGIN SUB-COMPONENT
+    // =========================================================================
+    function LoginPanel({ setUser, navigateTo, t }) {
+      const [loginMode, setLoginMode] = useState('otp');
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+      const [phone, setPhone] = useState('');
+      const [otp, setOtp] = useState('');
+      const [otpSent, setOtpSent] = useState(false);
+      const [errorMsg, setErrorMsg] = useState('');
+
+      const handleEmailLogin = (e) => {
+        e.preventDefault();
+        const users = fetchTable('preview-users');
+        const match = users.find(u => u.email === email && u.password === password);
+        if (match) {
+          setUser(match);
+          if (match.role === 'devotee') navigateTo('profile');
+          else navigateTo('admin');
+        } else {
+          setErrorMsg("Invalid credentials. Try: admin@siddheswar.org / password123");
+        }
+      };
+
+      const handleSendOTP = (e) => {
+        e.preventDefault();
+        if (phone.length < 10) {
+          setErrorMsg("Enter a valid 10-digit number.");
+          return;
+        }
+        setErrorMsg('');
+        setOtpSent(true);
+      };
+
+      const handleVerifyOTP = (e) => {
+        e.preventDefault();
+        if (otp !== '123456') {
+          setErrorMsg("Invalid code. Use: 123456 for preview.");
+          return;
+        }
+
+        const users = fetchTable('preview-users');
+        let matched = users.find(u => u.phone === phone);
+        if (!matched) {
+          matched = { id: `usr_${Date.now()}`, name: `Devotee ${phone.slice(-4)}`, email: `user_${phone.slice(-4)}@gmail.com`, phone, role: 'devotee' };
+          const updated = [...users, matched];
+          saveTable('preview-users', updated);
+        }
+        setUser(matched);
+        navigateTo('profile');
+      };
+
+      return (
+        <div className="min-h-[60vh] flex items-center justify-center px-4 py-12">
+          <div className="max-w-md w-full glass-card p-6 space-y-5 border-t-4 border-maroon box-glow text-xs font-semibold">
+            
+            <div className="text-center">
+              <h2 className="text-lg md:text-xl font-bold font-outfit text-maroon">{t('templeName')}</h2>
+              <span className="text-[10px] text-temple-500 font-bold uppercase mt-0.5 block">Console Authentication</span>
+            </div>
+
+            <div className="flex bg-temple-50 border border-saffron/10 rounded-lg overflow-hidden text-[10px] font-bold">
+              <button type="button" onClick={() => { setLoginMode('otp'); setOtpSent(false); setErrorMsg(''); }} className={`w-1/2 py-2 text-center ${loginMode==='otp'?'bg-saffron text-white':''}`}>OTP Login (Devotees)</button>
+              <button type="button" onClick={() => { setLoginMode('email'); setErrorMsg(''); }} className={`w-1/2 py-2 text-center ${loginMode==='email'?'bg-saffron text-white':''}`}>Staff Login (Admin)</button>
+            </div>
+
+            {errorMsg && <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-lg">{errorMsg}</div>}
+
+            {loginMode === 'otp' ? (
+              <div>
+                {!otpSent ? (
+                  <form onSubmit={handleSendOTP} className="space-y-4">
+                    <div className="flex flex-col space-y-1">
+                      <label className="text-temple-700 uppercase">Mobile Number</label>
+                      <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit number" className="px-3 py-2 bg-temple-50 border border-saffron/20 rounded-lg focus:outline-none" />
+                    </div>
+                    <button type="submit" className="w-full py-2.5 bg-maroon text-cream-light hover:bg-maroon-light rounded-lg font-bold">Send OTP Code</button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleVerifyOTP} className="space-y-4">
+                    <div className="flex flex-col space-y-1 text-center">
+                      <label className="text-temple-700 uppercase">Verification OTP</label>
+                      <input type="text" required value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="Verification Code" className="px-3 py-2 bg-temple-50 border border-saffron/20 rounded-lg focus:outline-none text-center font-bold tracking-widest" />
+                      <span className="text-[10px] text-gold-dark font-bold mt-1 block">* For testing preview, use code: <strong>123456</strong></span>
+                    </div>
+                    <button type="submit" className="w-full py-2.5 bg-saffron hover:bg-saffron-dark text-white rounded-lg font-bold">Verify & Log In</button>
+                  </form>
+                )}
+              </div>
+            ) : (
+              <form onSubmit={handleEmailLogin} className="space-y-4">
+                <div className="flex flex-col space-y-1">
+                  <label className="text-temple-700 uppercase">Staff Email</label>
+                  <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@siddheswar.org" className="px-3 py-2 bg-temple-50 border border-saffron/20 rounded-lg focus:outline-none font-semibold" />
+                </div>
+                <div className="flex flex-col space-y-1">
+                  <label className="text-temple-700 uppercase">Password</label>
+                  <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="px-3 py-2 bg-temple-50 border border-saffron/20 rounded-lg focus:outline-none" />
+                </div>
+                
+                <button type="submit" className="w-full py-2.5 bg-maroon text-cream-light hover:bg-maroon-light rounded-lg font-bold">Sign In as Staff</button>
+
+                <div className="p-3 bg-gold/10 border border-gold/20 text-[10px] rounded-lg leading-relaxed text-temple-800">
+                  <strong>Staff Credentials (testing):</strong><br />
+                  Email: <strong>admin@siddheswar.org</strong><br />
+                  Pass: <strong>password123</strong>
+                </div>
+              </form>
+            )}
+
+            <div className="text-center pt-2">
+              <span className="text-[11px] text-temple-500">Need devotee account? Cycle to OTP mode and send.</span>
+            </div>
+
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // REGISTER SUB-COMPONENT
+    // =========================================================================
+    function RegisterPanel({ setUser, navigateTo }) {
+      return (
+        <div className="min-h-[50vh] flex items-center justify-center p-4">
+          <p className="text-xs font-bold text-temple-600">Devotee registration is mapped directly via Mobile OTP flow on the Login page.</p>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // USER PROFILE PORTAL SUB-COMPONENT
+    // =========================================================================
+    function UserProfilePanel({ user, setUser, navigateTo, allSevas, allDonations }) {
+      const filteredSevas = allSevas.filter(s => s.phone === user.phone || s.email.toLowerCase() === user.email.toLowerCase());
+      const filteredDonations = allDonations.filter(d => d.phone === user.phone || d.email.toLowerCase() === user.email.toLowerCase());
+
+      const downloadSevaReceipt = (bk) => {
+        const text = `========================================================
+SEVA BOOKING SLIP - SIDHESWAR TEMPLE
+========================================================
+Ref Code:        ${bk.bookingReference}
+Devotee Name:    ${bk.devoteeName}
+Auspicious Date: ${bk.selectedDate}
+Seva Category:   ${bk.sevaType}
+Contribution:    INR ${bk.amount}/-
+Payment Status:  PAID (UPI)
+Approval Status: ${bk.approvalStatus.toUpperCase()}
+========================================================`;
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `${bk.bookingReference}_slip.txt`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      const downloadDonationReceipt = (don) => {
+        const text = `========================================================
+HUNDI DONATION SLIP - SIDHESWAR TEMPLE
+========================================================
+Receipt No:     ${don.receiptNumber}
+Donor Name:     ${don.donorName}
+Amount:         INR ${don.amount}/-
+Payment Mode:   UPI Gateway
+Date:           ${new Date(don.date).toLocaleString()}
+========================================================`;
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `${don.receiptNumber}_slip.txt`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      return (
+        <div className="animate-fadeIn max-w-5xl mx-auto px-4 py-12 space-y-8">
+          
+          <div className="bg-gradient-to-r from-maroon to-maroon-light p-6 rounded-2xl text-cream-light flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border border-gold/20 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white/10 text-gold rounded-full flex items-center justify-center font-bold text-xl border border-white/20">{user.name.charAt(0).toUpperCase()}</div>
+              <div>
+                <h3 className="font-extrabold text-sm text-white">{user.name}</h3>
+                <p className="text-[10px] text-cream-light/65">Mobile: +91 {user.phone} | Email: {user.email}</p>
+              </div>
+            </div>
+            <button onClick={() => { setUser(null); navigateTo('home'); }} className="px-4 py-2 border border-white/20 hover:bg-white/10 rounded-xl text-[10px] font-bold shrink-0 transition-colors">Sign Out</button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Sevas */}
+            <div className="glass-card p-6 border-t-4 border-maroon space-y-4">
+              <h3 className="font-bold text-sm text-temple-800 uppercase border-b pb-2">Seva Bookings History</h3>
+              {filteredSevas.length === 0 ? (
+                <p className="text-xs text-temple-500 font-semibold italic text-center py-4">No Seva bookings found under this account.</p>
+              ) : (
+                <div className="space-y-3">
+                  {filteredSevas.map(seva => (
+                    <div key={seva.id} className="p-3 bg-temple-50 rounded-xl border border-saffron/10 flex justify-between gap-4 text-xs font-semibold">
+                      <div className="space-y-1">
+                        <span className="text-[9px] text-saffron select-all">{seva.bookingReference}</span>
+                        <h4 className="font-bold text-temple-900">{seva.sevaType}</h4>
+                        <p className="text-[10px] text-temple-500 font-medium">Date: {seva.selectedDate}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1.5 justify-center">
+                        <span className={`px-2 py-0.5 rounded text-[8px] font-bold ${
+                          seva.approvalStatus === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                        }`}>{seva.approvalStatus.toUpperCase()}</span>
+                        <button onClick={() => downloadSevaReceipt(seva)} className="text-saffron hover:underline text-[9px] font-bold flex items-center gap-0.5"><i className="fa-solid fa-file-text"></i> Slip</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Donations */}
+            <div className="glass-card p-6 border-t-4 border-gold space-y-4">
+              <h3 className="font-bold text-sm text-temple-800 uppercase border-b pb-2">Digital Hundi Contributions</h3>
+              {filteredDonations.length === 0 ? (
+                <p className="text-xs text-temple-500 font-semibold italic text-center py-4">No donations found under this account.</p>
+              ) : (
+                <div className="space-y-3">
+                  {filteredDonations.map(don => (
+                    <div key={don.id} className="p-3 bg-temple-50 rounded-xl border border-saffron/10 flex justify-between gap-4 text-xs font-semibold">
+                      <div className="space-y-1">
+                        <span className="text-[9px] text-saffron select-all">{don.receiptNumber}</span>
+                        <h4 className="font-bold text-temple-900 capitalize">{don.category.replace(/_/g, ' ')}</h4>
+                        <p className="text-[10px] text-temple-500 font-medium">Date: {new Date(don.date).toLocaleDateString()}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1.5 justify-center">
+                        <strong className="text-maroon">₹{don.amount}</strong>
+                        <button onClick={() => downloadDonationReceipt(don)} className="text-saffron hover:underline text-[9px] font-bold flex items-center gap-0.5"><i className="fa-solid fa-file-text"></i> Receipt</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // ADMIN DASHBOARD PORTAL SUB-COMPONENT
+    // =========================================================================
+    function AdminDashboardPanel({
+      user, allSevas, setAllSevas, allDonations, allNotices, setAllNotices, allFaqs, setAllFaqs, allTickets, setAllTickets, allGallery, setAllGallery
+    }) {
+      const [adminTab, setAdminTab] = useState('analytics');
+
+      // Forms
+      const [nTitle, setNTitle] = useState('');
+      const [nContent, setNContent] = useState('');
+      const [nCat, setNCat] = useState('general');
+      const [faqQ, setFaqQ] = useState('');
+      const [faqA, setFaqA] = useState('');
+
+      const handleApproveSeva = (id) => {
+        const list = allSevas.map(s => s.id === id ? { ...s, approvalStatus: 'approved' } : s);
+        setAllSevas(list);
+        localStorage.setItem('preview-sevas', JSON.stringify(list));
+      };
+
+      const handleRejectSeva = (id) => {
+        const reason = window.prompt("Enter rejection reason:");
+        if (!reason) return;
+        const list = allSevas.map(s => s.id === id ? { ...s, approvalStatus: 'rejected', rejectionReason: reason } : s);
+        setAllSevas(list);
+        localStorage.setItem('preview-sevas', JSON.stringify(list));
+      };
+
+      const handleCreateNotice = (e) => {
+        e.preventDefault();
+        const newNotice = {
+          id: `not_${Date.now()}`,
+          titleEn: nTitle,
+          titleOr: nTitle,
+          titleHi: nTitle,
+          contentEn: nContent,
+          category: nCat,
+          isPinned: false,
+          publishDate: new Date().toISOString().split('T')[0],
+          expiryDate: "2026-12-31"
+        };
+        const list = [newNotice, ...allNotices];
+        setAllNotices(list);
+        localStorage.setItem('preview-notices', JSON.stringify(list));
+        setNTitle('');
+        setNContent('');
+      };
+
+      const handleDeleteNotice = (id) => {
+        const filtered = allNotices.filter(n => n.id !== id);
+        setAllNotices(filtered);
+        localStorage.setItem('preview-notices', JSON.stringify(filtered));
+      };
+
+      const handleCreateFAQ = (e) => {
+        e.preventDefault();
+        const newFAQ = {
+          id: `faq_${Date.now()}`,
+          questionEn: faqQ,
+          answerEn: faqA
+        };
+        const list = [...allFaqs, newFAQ];
+        setAllFaqs(list);
+        localStorage.setItem('preview-faqs', JSON.stringify(list));
+        setFaqQ('');
+        setFaqA('');
+      };
+
+      const handleDeleteFAQ = (id) => {
+        const filtered = allFaqs.filter(f => f.id !== id);
+        setAllFaqs(filtered);
+        localStorage.setItem('preview-faqs', JSON.stringify(filtered));
+      };
+
+      const handleResolveTicket = (id) => {
+        const notes = window.prompt("Enter resolution note details:");
+        if (!notes) return;
+        const list = allTickets.map(t => t.id === id ? { ...t, status: 'resolved', adminNotes: notes } : t);
+        setAllTickets(list);
+        localStorage.setItem('preview-tickets', JSON.stringify(list));
+      };
+
+      // Backup Download
+      const handleBackup = () => {
+        const tables = { sevas: allSevas, donations: allDonations, notices: allNotices, faqs: allFaqs, tickets: allTickets, gallery: allGallery };
+        const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(tables, null, 2))}`;
+        const link = document.createElement('a');
+        link.href = jsonString;
+        link.setAttribute('download', `temple_console_backup.json`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      const allowedTabs = [
+        { code: 'analytics', label: 'Analytics Overview', icon: 'fa-chart-line', roles: ['super_admin', 'donation_manager', 'seva_manager'] },
+        { code: 'sevas', label: 'Manage Sevas', icon: 'fa-gift', roles: ['super_admin', 'seva_manager'] },
+        { code: 'donations', label: 'Manage Donations', icon: 'fa-heart', roles: ['super_admin', 'donation_manager'] },
+        { code: 'notices', label: 'Manage Notices', icon: 'fa-bullhorn', roles: ['super_admin', 'content_editor', 'notice_manager'] },
+        { code: 'tickets', label: 'Inquiry Tickets', icon: 'fa-clipboard-list', roles: ['super_admin', 'content_editor'] },
+        { code: 'faqs', label: 'Manage FAQs', icon: 'fa-circle-question', roles: ['super_admin', 'content_editor'] },
+        { code: 'backup', label: 'Maintenance Backups', icon: 'fa-database', roles: ['super_admin'] }
+      ].filter(t => t.roles.includes(user.role));
+
+      return (
+        <div className="min-h-screen bg-slate-100 flex flex-col lg:flex-row text-xs font-semibold">
+          {/* Sub sidebar */}
+          <div className="w-full lg:w-56 bg-temple-dark text-cream-light p-4 space-y-4 shrink-0 font-outfit border-r border-gold/15">
+            <div className="border-b border-white/10 pb-2">
+              <h4 className="font-extrabold uppercase text-[11px]">Console Controls</h4>
+              <p className="text-[10px] text-cream-light/60 font-semibold">{user.name.split(' ')[0]} ({user.role})</p>
+            </div>
+            <nav className="space-y-1 font-bold flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible no-scrollbar">
+              {allowedTabs.map(tab => (
+                <button 
+                  key={tab.code} 
+                  onClick={() => setAdminTab(tab.code)} 
+                  className={`w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 whitespace-nowrap ${
+                    adminTab === tab.code ? 'bg-saffron text-white' : 'hover:bg-white/5 text-cream-light/80'
+                  }`}
+                >
+                  <i className={`fa-solid ${tab.icon}`}></i>
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {/* Sub content workspace */}
+          <div className="flex-grow p-6 space-y-6">
+            <div className="flex justify-between items-center border-b pb-3">
+              <h3 className="text-base md:text-lg font-bold font-outfit text-maroon capitalize">{adminTab.replace('_', ' ')} Panel</h3>
+              <span className="text-[10px] font-bold text-temple-500 uppercase">System Sync Ok</span>
+            </div>
+
+            {/* Analytics */}
+            {adminTab === 'analytics' && (
+              <div className="space-y-6 animate-fadeIn">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center">
+                  <div className="bg-white p-4 border border-saffron/10 rounded-xl">
+                    <span className="text-[9px] text-temple-500 uppercase font-bold block">Digital Hundi</span>
+                    <strong className="text-xl font-outfit text-maroon block mt-1">₹{allDonations.reduce((sum, d) => sum + Number(d.amount), 0)}</strong>
+                  </div>
+                  <div className="bg-white p-4 border border-saffron/10 rounded-xl">
+                    <span className="text-[9px] text-temple-500 uppercase font-bold block">Donors Logged</span>
+                    <strong className="text-xl font-outfit text-saffron block mt-1">{allDonations.length}</strong>
+                  </div>
+                  <div className="bg-white p-4 border border-saffron/10 rounded-xl">
+                    <span className="text-[9px] text-temple-500 uppercase font-bold block">Pending Sevas</span>
+                    <strong className="text-xl font-outfit text-gold-dark block mt-1">{allSevas.filter(s=>s.approvalStatus==='pending').length}</strong>
+                  </div>
+                  <div className="bg-white p-4 border border-saffron/10 rounded-xl">
+                    <span className="text-[9px] text-temple-500 uppercase font-bold block">Open Tickets</span>
+                    <strong className="text-xl font-outfit text-emerald-800 block mt-1">{allTickets.filter(t=>t.status==='open').length}</strong>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Sevas */}
+            {adminTab === 'sevas' && (
+              <div className="bg-white p-4 rounded-xl border border-saffron/10 space-y-4 animate-fadeIn">
+                <h4 className="font-bold text-sm text-temple-900 border-b pb-2">Seva Bookings Approval board</h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-temple-800">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-saffron/10 text-[10px] text-temple-500 uppercase">
+                        <th className="p-2">Reference</th>
+                        <th className="p-2">Devotee</th>
+                        <th className="p-2">Seva</th>
+                        <th className="p-2">Date</th>
+                        <th className="p-2">Amount</th>
+                        <th className="p-2 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-saffron/5 font-semibold">
+                      {allSevas.map(s => (
+                        <tr key={s.id} className="hover:bg-slate-50/50">
+                          <td className="p-2 font-bold text-saffron">{s.bookingReference}</td>
+                          <td className="p-2">{s.devoteeName}</td>
+                          <td className="p-2">{s.sevaType}</td>
+                          <td className="p-2">{s.selectedDate}</td>
+                          <td className="p-2 text-maroon font-bold font-outfit">₹{s.amount}</td>
+                          <td className="p-2 text-right space-x-1.5">
+                            {s.approvalStatus === 'pending' ? (
+                              <>
+                                <button onClick={() => handleApproveSeva(s.id)} className="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded">Approve</button>
+                                <button onClick={() => handleRejectSeva(s.id)} className="px-2 py-0.5 bg-rose-600 hover:bg-rose-700 text-white rounded">Reject</button>
+                              </>
+                            ) : (
+                              <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+                                s.approvalStatus === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                              }`}>{s.approvalStatus.toUpperCase()}</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Donations */}
+            {adminTab === 'donations' && (
+              <div className="bg-white p-4 rounded-xl border border-saffron/10 space-y-4 animate-fadeIn">
+                <h4 className="font-bold text-sm text-temple-900 border-b pb-2">Donations transparency ledger</h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-temple-800">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-saffron/10 text-[10px] text-temple-500 uppercase">
+                        <th className="p-2">Receipt No</th>
+                        <th className="p-2">Donor</th>
+                        <th className="p-2">Purpose</th>
+                        <th className="p-2">txnId</th>
+                        <th className="p-2">Amount</th>
+                        <th className="p-2">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-saffron/5 font-semibold">
+                      {allDonations.map(d => (
+                        <tr key={d.id}>
+                          <td className="p-2 font-bold text-saffron">{d.receiptNumber}</td>
+                          <td className="p-2">{d.donorName}</td>
+                          <td className="p-2 capitalize">{d.category.replace(/_/g, ' ')}</td>
+                          <td className="p-2 text-[10px] text-temple-500 font-mono">{d.transactionId}</td>
+                          <td className="p-2 text-maroon font-bold font-outfit">₹{d.amount}</td>
+                          <td className="p-2 text-temple-500">{new Date(d.date).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Notices */}
+            {adminTab === 'notices' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
+                {/* Form */}
+                <form onSubmit={handleCreateNotice} className="bg-white p-5 rounded-xl border border-saffron/10 space-y-4 h-fit">
+                  <h4 className="font-bold text-sm text-temple-900">Publish Notice</h4>
+                  <div className="flex flex-col space-y-1">
+                    <label>Notice Title</label>
+                    <input type="text" required value={nTitle} onChange={(e) => setNTitle(e.target.value)} placeholder="Title" className="px-3 py-2 bg-slate-50 border border-saffron/15 rounded-lg focus:outline-none" />
+                  </div>
+                  <div className="flex flex-col space-y-1">
+                    <label>Notice Content</label>
+                    <textarea rows={3} required value={nContent} onChange={(e) => setNContent(e.target.value)} placeholder="Announcement details..." className="px-3 py-2 bg-slate-50 border border-saffron/15 rounded-lg focus:outline-none resize-none" />
+                  </div>
+                  <div className="flex flex-col space-y-1">
+                    <label>Notice Category</label>
+                    <select value={nCat} onChange={(e) => setNCat(e.target.value)} className="px-3 py-2 bg-slate-50 border border-saffron/15 rounded-lg focus:outline-none">
+                      <option value="general">General</option>
+                      <option value="urgent">Urgent</option>
+                      <option value="closure">Closure</option>
+                    </select>
+                  </div>
+                  <button type="submit" className="w-full py-2 bg-saffron text-white rounded-lg font-bold">Publish Notice</button>
+                </form>
+
+                {/* List */}
+                <div className="lg:col-span-2 bg-white p-5 rounded-xl border border-saffron/10 space-y-3">
+                  <h4 className="font-bold text-sm text-temple-900 border-b pb-2">Published Board</h4>
+                  <div className="space-y-3">
+                    {allNotices.map(n => (
+                      <div key={n.id} className="p-3 bg-slate-50 border border-saffron/5 rounded-lg flex justify-between gap-3">
+                        <div>
+                          <span className="text-[9px] text-saffron uppercase block">{n.category}</span>
+                          <h5 className="font-bold text-temple-800 mt-0.5">{n.titleEn}</h5>
+                          <p className="text-[10px] text-temple-600 mt-1 leading-normal">{n.contentEn}</p>
+                        </div>
+                        <button onClick={() => handleDeleteNotice(n.id)} className="text-rose-600 self-start p-1.5"><i className="fa-solid fa-trash-can"></i></button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tickets */}
+            {adminTab === 'tickets' && (
+              <div className="bg-white p-4 rounded-xl border border-saffron/10 space-y-4 animate-fadeIn">
+                <h4 className="font-bold text-sm text-temple-900 border-b pb-2">Devotee Inquiries & Fraud Reports</h4>
+                <div className="space-y-3">
+                  {allTickets.map(t => (
+                    <div key={t.id} className="p-3 bg-slate-50 rounded-lg border border-saffron/10 flex justify-between items-start gap-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-saffron font-bold text-[9px]">{t.ticketNumber}</span>
+                          <span className="text-[9px] bg-slate-200 px-2 py-0.5 rounded-full capitalize">{t.type.replace(/_/g, ' ')}</span>
+                          <span className={`text-[9px] px-1.5 rounded ${t.status==='resolved'?'bg-emerald-100 text-emerald-800':'bg-amber-100 text-amber-800'}`}>{t.status.toUpperCase()}</span>
+                        </div>
+                        <h4 className="font-bold text-temple-800 mt-1">{t.subject}</h4>
+                        <p className="text-[10px] text-temple-600 mt-1">{t.message}</p>
+                        {t.adminNotes && <p className="text-[10px] text-emerald-800 mt-2 font-bold"><i className="fa-solid fa-circle-check"></i> Resolution: {t.adminNotes}</p>}
+                      </div>
+
+                      {t.status === 'open' && (
+                        <button onClick={() => handleResolveTicket(t.id)} className="px-2 py-1 bg-saffron text-white rounded text-[10px]">Resolve</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* FAQs */}
+            {adminTab === 'faqs' && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
+                <form onSubmit={handleCreateFAQ} className="bg-white p-5 rounded-xl border border-saffron/10 space-y-4 h-fit">
+                  <h4 className="font-bold text-sm text-temple-900">Add New FAQ</h4>
+                  <div className="flex flex-col space-y-1">
+                    <label>FAQ Question</label>
+                    <input type="text" required value={faqQ} onChange={(e) => setFaqQ(e.target.value)} className="px-3 py-2 bg-slate-50 border border-saffron/15 rounded-lg focus:outline-none" />
+                  </div>
+                  <div className="flex flex-col space-y-1">
+                    <label>FAQ Answer</label>
+                    <textarea rows={3} required value={faqA} onChange={(e) => setFaqA(e.target.value)} className="px-3 py-2 bg-slate-50 border border-saffron/15 rounded-lg focus:outline-none resize-none" />
+                  </div>
+                  <button type="submit" className="w-full py-2 bg-saffron text-white rounded-lg font-bold">Add FAQ</button>
+                </form>
+
+                <div className="lg:col-span-2 bg-white p-5 rounded-xl border border-saffron/10 space-y-3">
+                  <h4 className="font-bold text-sm text-temple-900 border-b pb-2">Active FAQ Cards</h4>
+                  <div className="space-y-3">
+                    {allFaqs.map(f => (
+                      <div key={f.id} className="p-3 bg-slate-50 rounded-lg border border-saffron/5 flex justify-between gap-3">
+                        <div>
+                          <h5 className="font-bold text-temple-900">{f.questionEn}</h5>
+                          <p className="text-[10px] text-temple-600 mt-1 leading-normal font-medium">{f.answerEn}</p>
+                        </div>
+                        <button onClick={() => handleDeleteFAQ(f.id)} className="text-rose-600 self-start p-1.5"><i className="fa-solid fa-trash-can"></i></button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Backups */}
+            {adminTab === 'backup' && (
+              <div className="bg-white p-6 rounded-xl border border-saffron/10 max-w-sm space-y-3 animate-fadeIn">
+                <h4 className="font-bold text-sm text-temple-900"><i className="fa-solid fa-database text-saffron"></i> Database Administration</h4>
+                <p className="text-[10px] text-temple-600 leading-normal font-medium">Backup devotee accounts, transaction lists, notice records, and log activities. Saves a compile-ready JSON file.</p>
+                <button onClick={handleBackup} className="px-4 py-2 bg-saffron text-white font-bold rounded-lg hover:bg-saffron-dark transition-colors">Download JSON Backup</button>
+              </div>
+            )}
+
+          </div>
+        </div>
+      );
+    }
+
+    // Mount to Root DOM
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+
+  </script>
+</body>
+</html>

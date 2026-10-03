@@ -61,13 +61,9 @@ async function init() {
       ...[...SEED_FESTIVALS].reverse().map((d) => ({ kind: 'festival', id: d.id, data: d })),
       ...SEED_GALLERY.map((d) => ({ kind: 'gallery', id: d.id, data: d })),
       ...SEED_FAQS.map((d) => ({ kind: 'faq', id: d.id, data: d })),
-    ];
-    await sql.query(
-      `INSERT INTO docs (kind, id, data)
-       SELECT kind, id, data FROM jsonb_to_recordset($1::jsonb) AS t(kind text, id text, data jsonb)
-       ON CONFLICT DO NOTHING`,
-      [JSON.stringify(rows)]
-    );
+    ];    await sql`INSERT INTO docs (kind, id, data)
+      SELECT kind, id, data FROM jsonb_to_recordset(${JSON.stringify(rows)}::jsonb) AS t(kind text, id text, data jsonb)
+      ON CONFLICT DO NOTHING`;
   }
 }
 
@@ -101,3 +97,4 @@ export async function deleteDoc(kind, id) {
   const rows = await db()`DELETE FROM docs WHERE kind = ${kind} AND id = ${id} RETURNING id`;
   return rows.length > 0;
 }
+

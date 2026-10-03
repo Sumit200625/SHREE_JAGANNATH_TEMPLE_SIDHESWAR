@@ -48,7 +48,7 @@ async function route(req, res, method, path, url) {
     return send(res, 200, { googleClientId: process.env.GOOGLE_CLIENT_ID || '', paymentsEnabled: paymentsEnabled() });
 
   // ---------------- auth ----------------
-  if (key === 'POST /auth/google') {
+  if (key === 'POST /account/google') {
     rateLimit(req, 'login', 20, 60_000);
     const { credential } = await readJson(req);
     const payload = await verifyGoogleCredential(str(credential, 4000));
@@ -56,7 +56,7 @@ async function route(req, res, method, path, url) {
     await startSession(res, u.id);
     return send(res, 200, { user: publicUser(u) });
   }
-  if (key === 'POST /auth/register') {
+  if (key === 'POST /account/register') {
     rateLimit(req, 'register', 10, 60_000);
     const d = await readJson(req);
     const name = str(d.name, 80), email = str(d.email, 254).toLowerCase(), phone = str(d.phone, 10), pw = String(d.password || '');
@@ -75,7 +75,7 @@ async function route(req, res, method, path, url) {
       throw e;
     }
   }
-  if (key === 'POST /auth/login') {
+  if (key === 'POST /account/login') {
     rateLimit(req, 'login', 10, 60_000);
     const d = await readJson(req);
     const email = str(d.email, 254).toLowerCase();
@@ -86,9 +86,9 @@ async function route(req, res, method, path, url) {
     await startSession(res, u.id);
     return send(res, 200, { user: publicUser(u) });
   }
-  if (key === 'POST /auth/logout') { endSession(res); return send(res, 200, { ok: true }); }
-  if (key === 'GET /auth/me') return send(res, 200, { user: await currentUser(req) });
-  if (key === 'PATCH /auth/profile') {
+  if (key === 'POST /account/logout') { endSession(res); return send(res, 200, { ok: true }); }
+  if (key === 'GET /account/me') return send(res, 200, { user: await currentUser(req) });
+  if (key === 'PATCH /account/profile') {
     const me = await requireUser(req);
     const d = await readJson(req);
     const rows = await db()`UPDATE users SET name = COALESCE(NULLIF(${str(d.name, 80)}, ''), name),
@@ -344,3 +344,4 @@ export default async function handler(req, res) {
     send(res, e.status || 500, { error: e instanceof HttpError ? e.message : 'Something went wrong. Please try again.' });
   }
 }
+

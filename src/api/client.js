@@ -70,12 +70,12 @@ export const api = {
   config: () => call('/config'),
 
   // auth
-  googleLogin: (credential) => call('/auth/google', { method: 'POST', body: { credential } }),
-  register: (body) => call('/auth/register', { method: 'POST', body }),
-  login: (body) => call('/auth/login', { method: 'POST', body }),
-  logout: () => call('/auth/logout', { method: 'POST' }),
-  me: () => call('/auth/me'),
-  updateProfile: (body) => call('/auth/profile', { method: 'PATCH', body }),
+  googleLogin: (credential) => call('/account/google', { method: 'POST', body: { credential } }),
+  register: (body) => call('/account/register', { method: 'POST', body }),
+  login: (body) => call('/account/login', { method: 'POST', body }),
+  logout: () => call('/account/logout', { method: 'POST' }),
+  me: () => call('/account/me'),
+  updateProfile: (body) => call('/account/profile', { method: 'PATCH', body }),
 
   // content
   getNotices: () => call('/notices'),
@@ -125,3 +125,4 @@ export const api = {
     };
   },
 };
+

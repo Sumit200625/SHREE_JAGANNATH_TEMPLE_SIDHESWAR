@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { Youtube, Facebook, Instagram, Mail, Phone, MapPin, ShieldAlert, Award } from 'lucide-react';
+import { SITE } from '../config/site';
 
 export default function Footer() {
   const { t } = useLanguage();
@@ -38,16 +39,16 @@ export default function Footer() {
             
             {/* Social media icons */}
             <div className="flex items-center space-x-3 pt-2">
-              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 hover:bg-saffron hover:text-white rounded-full text-gold hover:scale-115 transition-all duration-300" aria-label="YouTube">
+              <a href={SITE.youtube} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 hover:bg-saffron hover:text-white rounded-full text-gold hover:scale-115 transition-all duration-300" aria-label="YouTube">
                 <Youtube size={16} />
               </a>
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 hover:bg-saffron hover:text-white rounded-full text-gold hover:scale-115 transition-all duration-300" aria-label="Facebook">
+              <a href={SITE.facebook} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 hover:bg-saffron hover:text-white rounded-full text-gold hover:scale-115 transition-all duration-300" aria-label="Facebook">
                 <Facebook size={16} />
               </a>
-              <a href="https://www.instagram.com/p/DaaY1xLgOs8/?igsh=MW5lNG5xZmhienBueg==" target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 hover:bg-saffron hover:text-white rounded-full text-gold hover:scale-115 transition-all duration-300" aria-label="Instagram">
+              <a href={SITE.instagram} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 hover:bg-saffron hover:text-white rounded-full text-gold hover:scale-115 transition-all duration-300" aria-label="Instagram">
                 <Instagram size={16} />
               </a>
-              <a href="mailto:info@siddheswarjagannath.org" className="p-2 bg-white/5 hover:bg-saffron hover:text-white rounded-full text-gold hover:scale-115 transition-all duration-300" aria-label="Email">
+              <a href={SITE.emailLink} className="p-2 bg-white/5 hover:bg-saffron hover:text-white rounded-full text-gold hover:scale-115 transition-all duration-300" aria-label="Email">
                 <Mail size={16} />
               </a>
             </div>
@@ -85,15 +86,11 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Phone size={14} className="text-saffron shrink-0" />
-                <span>Helpline: +91 94371 XXXXX (Manager)</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Phone size={14} className="text-saffron shrink-0" />
-                <span>Emergency Contact: +91 93378 22942</span>
+                <a href={SITE.phoneTel} className="hover:text-gold">Helpline / WhatsApp: {SITE.phoneDisplay}</a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail size={14} className="text-saffron shrink-0" />
-                <span>Email: trust@siddheswarjagannath.org</span>
+                <a href={SITE.emailLink} className="hover:text-gold break-all">Email: {SITE.email}</a>
               </li>
             </ul>
           </div>

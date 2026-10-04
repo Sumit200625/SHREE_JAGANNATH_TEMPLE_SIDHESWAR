@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../api/client';
 import { Mail, Phone, Clock, Send, MessageSquare, ShieldAlert, Award, FileText, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
+import { SITE } from '../config/site';
 
 export default function ContactGrievance() {
   const { t } = useLanguage();
@@ -70,7 +71,7 @@ export default function ContactGrievance() {
       
       {/* Page Header */}
       <div className="relative bg-temple-dark text-cream-light py-20 border-b border-gold/20 text-center">
-        <div className="absolute inset-0 bg-[url('/assets/temple_exterior.png')] bg-cover bg-center opacity-25"></div>
+        <div className="absolute inset-0 bg-[url('/assets/temple_chariot_sunset.jpg')] bg-cover bg-center opacity-25"></div>
         <div className="relative z-10 max-w-4xl mx-auto px-4">
           <h2 className="text-3xl md:text-5xl font-extrabold font-outfit text-glow text-white">
             {t('contact')}
@@ -93,8 +94,8 @@ export default function ContactGrievance() {
             <div className="w-12 h-12 bg-saffron/10 text-saffron rounded-full flex items-center justify-center"><Phone size={20} /></div>
             <h4 className="font-bold text-sm text-temple-900">Phone Helplines</h4>
             <p className="text-xs text-temple-600 leading-relaxed font-semibold">
-              Helpline: +91 94371 XXXXX (Manager)<br />
-              Emergency: +91 93378 22942
+              <a href={SITE.phoneTel} className="text-saffron hover:underline font-bold">{SITE.phoneDisplay}</a><br />
+              Helpline / WhatsApp
             </p>
           </div>
 
@@ -103,9 +104,13 @@ export default function ContactGrievance() {
             <div className="w-12 h-12 bg-gold/10 text-gold-dark rounded-full flex items-center justify-center"><Mail size={20} /></div>
             <h4 className="font-bold text-sm text-temple-900">Email Correspondence</h4>
             <p className="text-xs text-temple-600 leading-relaxed font-semibold">
-              info@siddheswarjagannath.org<br />
-              trust@siddheswarjagannath.org
+              <a href={SITE.emailLink} className="text-saffron hover:underline font-bold break-all">{SITE.email}</a>
             </p>
+            <div className="flex items-center justify-center gap-3 pt-1 text-[11px] font-bold">
+              <a href={SITE.instagram} target="_blank" rel="noopener noreferrer" className="text-saffron hover:underline">Instagram</a>
+              <a href={SITE.youtube} target="_blank" rel="noopener noreferrer" className="text-saffron hover:underline">YouTube</a>
+              <a href={SITE.facebook} target="_blank" rel="noopener noreferrer" className="text-saffron hover:underline">Facebook</a>
+            </div>
           </div>
 
           {/* Item 3 */}
@@ -289,7 +294,7 @@ export default function ContactGrievance() {
                 <p className="text-[10px] text-emerald-700 font-semibold mt-0.5">Need instant help? Connect with our manager directly.</p>
               </div>
               <a 
-                href="https://api.whatsapp.com/send?phone=919437199999&text=Hello%20Siddheswar%20Temple%20Office"
+                href={SITE.whatsapp}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold whitespace-nowrap shadow-sm transition-colors"
@@ -311,11 +316,13 @@ export default function ContactGrievance() {
             </p>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs text-temple-800 font-extrabold list-disc pl-5">
               <li>Kishor Chandra Padhy</li>
-              <li>Sarat Chandra Padhy</li>
+              <li>Lulu Padhy</li>
               <li>Rama Chandra Padhy</li>
               <li>Krushna Chandra Padhy</li>
               <li>Binod Chandra Padhy</li>
               <li>Pramod Chandra Padhy</li>
+              <li>Kanhu Charan Khadanga</li>
+              <li>Pramod Padhy</li>
             </ul>
             <div className="mt-4 pt-3 border-t border-saffron/10 text-xs text-temple-600 font-bold">
               Emergency Contact / Helpline: <a href="tel:+919337822942" className="text-saffron hover:underline">+91 93378 22942</a>

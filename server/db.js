@@ -31,7 +31,6 @@ async function init() {
     address text,
     created_at timestamptz NOT NULL DEFAULT now()
   )`;
-  // Generic document table: notices, festivals, faqs, gallery, sevas, donations, tickets, audit logs
   await sql`CREATE TABLE IF NOT EXISTS docs (
     seq bigserial,
     kind text NOT NULL,
@@ -55,15 +54,37 @@ async function init() {
 
   const [{ c }] = await sql`SELECT count(*)::int AS c FROM docs WHERE kind IN ('notice','festival','gallery','faq')`;
   if (c === 0) {
-    // "newest first" kinds are read ORDER BY seq DESC, so insert them reversed to keep the original order on screen
     const rows = [
       ...[...SEED_NOTICES].reverse().map((d) => ({ kind: 'notice', id: d.id, data: d })),
       ...[...SEED_FESTIVALS].reverse().map((d) => ({ kind: 'festival', id: d.id, data: d })),
       ...SEED_GALLERY.map((d) => ({ kind: 'gallery', id: d.id, data: d })),
       ...SEED_FAQS.map((d) => ({ kind: 'faq', id: d.id, data: d })),
-    ];    await sql`INSERT INTO docs (kind, id, data)
-      SELECT kind, id, data FROM jsonb_to_recordset(${JSON.stringify(rows)}::jsonb) AS t(kind text, id text, data jsonb)
-      ON CONFLICT DO NOTHING`;
+    ];
+    await sql`
+      INSERT INTO docs (kind, id, data)
+      SELECT kind, id, data
+      FROM jsonb_to_recordset(${JSON.stringify(rows)}::jsonb) AS t(kind text, id text, data jsonb)
+      ON CONFLICT DO NOTHING
+    `;
+  }
+
+  // One-time content update for already-seeded sites: real photos, Lord Jagannath only, new contact number.
+  // Overwrites built-in festival/gallery entries (same ids) and removes old demo gallery pictures.
+  // Devotee uploads and admin-created notices are NOT touched.
+  const migrated = await sql`SELECT 1 FROM docs WHERE kind = 'meta' AND id = 'content_v2'`;
+  if (!migrated.length) {
+    const fresh = [
+      ...SEED_FESTIVALS.map((d) => ({ kind: 'festival', id: d.id, data: d })),
+      ...SEED_GALLERY.map((d) => ({ kind: 'gallery', id: d.id, data: d })),
+    ];
+    await sql`
+      INSERT INTO docs (kind, id, data)
+      SELECT kind, id, data
+      FROM jsonb_to_recordset(${JSON.stringify(fresh)}::jsonb) AS t(kind text, id text, data jsonb)
+      ON CONFLICT (kind, id) DO UPDATE SET data = EXCLUDED.data
+    `;
+    await sql`DELETE FROM docs WHERE kind = 'gallery' AND data->>'imageUrl' LIKE '/assets/%.png'`;
+    await sql`INSERT INTO docs (kind, id, data) VALUES ('meta', 'content_v2', '{}'::jsonb) ON CONFLICT DO NOTHING`;
   }
 }
 
@@ -97,4 +118,3 @@ export async function deleteDoc(kind, id) {
   const rows = await db()`DELETE FROM docs WHERE kind = ${kind} AND id = ${id} RETURNING id`;
   return rows.length > 0;
 }
-

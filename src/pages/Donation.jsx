@@ -9,10 +9,10 @@ export default function Donation() {
   const { t } = useLanguage();
   const { user } = useAuth();
 
-  const preSets = [501, 1100, 2500, 5001];
+  const preSets = [50, 100, 200, 500, 1000, 2000];
 
   // Donation state
-  const [amount, setAmount] = useState(1100);
+  const [amount, setAmount] = useState(500);
   const [customVal, setCustomVal] = useState('');
   const [formData, setFormData] = useState({
     donorName: user ? user.name : '',
@@ -38,16 +38,19 @@ export default function Donation() {
   };
 
   const handleCustomChange = (e) => {
-    const val = e.target.value;
+    // digits only, no negatives / decimals / text
+    const val = e.target.value.replace(/\D/g, '').slice(0, 7);
     setCustomVal(val);
-    setAmount(Number(val) || 0);
+    setAmount(val ? parseInt(val, 10) : 0);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
     if (!Number.isInteger(amount) || amount < MIN_DONATION || amount > MAX_DONATION) {
-      setErrorMsg(`Enter a whole amount between ₹${MIN_DONATION} and ₹${MAX_DONATION}.`);
+      setErrorMsg(amount > MAX_DONATION
+        ? 'For a single online payment the maximum is ₹' + MAX_DONATION.toLocaleString('en-IN') + '. For larger gifts please contact the temple office.'
+        : 'Please enter an amount of at least ₹' + MIN_DONATION + '.');
       return;
     }
     setLoading(true);
@@ -103,7 +106,7 @@ Payment Mode:     ${don.paymentGateway || 'Online'} (UPI / Card / Netbanking)
       
       {/* Page Header */}
       <div className="relative bg-temple-dark text-cream-light py-20 border-b border-gold/20 text-center">
-        <div className="absolute inset-0 bg-[url('/assets/hero_jagannath.png')] bg-cover bg-center opacity-25"></div>
+        <div className="absolute inset-0 bg-[url('/assets/jagannath_tulasi_closeup.jpg')] bg-cover bg-center opacity-25"></div>
         <div className="relative z-10 max-w-4xl mx-auto px-4">
           <h2 className="text-3xl md:text-5xl font-extrabold font-outfit text-glow text-white">
             {t('donation')}
@@ -139,7 +142,7 @@ Payment Mode:     ${don.paymentGateway || 'Online'} (UPI / Card / Netbanking)
                 {/* Amount Selectors */}
                 <div className="space-y-3">
                   <label className="text-xs font-bold text-temple-700 uppercase">Select Contribution Amount (INR)</label>
-                  <div className="grid grid-cols-4 gap-3">
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
                     {preSets.map((val) => (
                       <button
                         type="button"
@@ -160,13 +163,21 @@ Payment Mode:     ${don.paymentGateway || 'Online'} (UPI / Card / Netbanking)
                   <div className="relative">
                     <span className="absolute left-4 top-3 text-sm font-bold text-temple-400">₹</span>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      aria-label="Custom donation amount in rupees"
                       value={customVal}
                       onChange={handleCustomChange}
                       placeholder={t('customAmount')}
                       className="w-full pl-8 pr-4 py-3 bg-temple-50 border border-saffron/20 rounded-xl text-xs font-semibold focus:ring-1 focus:ring-saffron focus:outline-none"
                     />
                   </div>
+                  <p className={'text-[11px] font-semibold ' + (customVal && amount < MIN_DONATION ? 'text-rose-700' : 'text-temple-500')}>
+                    {customVal && amount < MIN_DONATION
+                      ? 'Minimum donation is ₹' + MIN_DONATION + '.'
+                      : 'Choose an amount or enter your own (minimum ₹' + MIN_DONATION + ').'}
+                  </p>
                 </div>
 
                 {/* Fields */}
@@ -258,7 +269,7 @@ Payment Mode:     ${don.paymentGateway || 'Online'} (UPI / Card / Netbanking)
                   <div className="w-full">
                     <button
                       type="submit"
-                      disabled={loading || amount <= 0}
+                      disabled={loading || amount < MIN_DONATION}
                       className="w-full py-4 bg-saffron hover:bg-saffron-dark text-white font-bold rounded-xl shadow-md transition-colors text-sm flex items-center justify-center gap-2"
                     >
                       <QrCode size={16} />

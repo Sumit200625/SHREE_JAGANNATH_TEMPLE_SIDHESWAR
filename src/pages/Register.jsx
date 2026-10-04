@@ -30,12 +30,16 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name || !email || !phone || !password) return;
+    setErrorMsg('');
+    if (!name.trim()) { setErrorMsg('Please enter your full name.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) { setErrorMsg('Please enter a valid email address.'); return; }
+    if (!/^[6-9]\d{9}$/.test(phone)) { setErrorMsg('Please enter a valid 10-digit Indian mobile number.'); return; }
+    if (password.length < 8) { setErrorMsg('Password must be at least 8 characters.'); return; }
     setLoading(true);
     setErrorMsg('');
 
     try {
-      const res = await register(name, email, phone, password);
+      const res = await register(name.trim(), email.trim(), phone, password);
       setLoading(false);
       if (res.success) {
         navigate('/profile');
@@ -44,7 +48,7 @@ export default function Register() {
       }
     } catch (err) {
       setLoading(false);
-      setErrorMsg("An unexpected registration error occurred. Try again.");
+      setErrorMsg("Could not complete registration. Please try again.");
     }
   };
 

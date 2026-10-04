@@ -1,14 +1,30 @@
-// Real API client (replaces the old localStorage mockApi). Same method names, so pages keep working.
+// Real API client. Auth uses single-level paths: /register /login /logout /me /google-login /profile
 async function call(path, { method = 'GET', body, raw, headers } = {}) {
-  const res = await fetch(`/api${path}`, {
-    method,
-    credentials: 'same-origin',
-    headers: raw ? headers : { ...(body ? { 'Content-Type': 'application/json' } : {}), ...headers },
-    body: raw ? raw : body ? JSON.stringify(body) : undefined,
-  });
+  let res;
+  try {
+    res = await fetch(`/api${path}`, {
+      method,
+      credentials: 'same-origin',
+      headers: raw ? headers : { ...(body ? { 'Content-Type': 'application/json' } : {}), ...headers },
+      body: raw ? raw : body ? JSON.stringify(body) : undefined,
+    });
+  } catch {
+    throw new Error('Could not reach the server. Please check your internet connection and try again.');
+  }
+
   const data = await res.json().catch(() => ({}));
+
   if (!res.ok) {
-    const err = new Error(data.error || 'Request failed. Please try again.');
+    let msg = data.error;
+    if (!msg) {
+      if (res.status === 401) msg = 'Your session has expired. Please log in again.';
+      else if (res.status === 403) msg = 'You do not have permission to do this.';
+      else if (res.status === 404) msg = 'This service is not available right now. Please refresh the page and try again.';
+      else if (res.status === 429) msg = 'Too many attempts. Please wait a minute and try again.';
+      else if (res.status >= 500) msg = 'The server is temporarily unavailable. Please try again in a moment.';
+      else msg = 'Something went wrong. Please try again.';
+    }
+    const err = new Error(msg);
     err.status = res.status;
     throw err;
   }
@@ -70,12 +86,12 @@ export const api = {
   config: () => call('/config'),
 
   // auth
-  googleLogin: (credential) => call('/account/google', { method: 'POST', body: { credential } }),
-  register: (body) => call('/account/register', { method: 'POST', body }),
-  login: (body) => call('/account/login', { method: 'POST', body }),
-  logout: () => call('/account/logout', { method: 'POST' }),
-  me: () => call('/account/me'),
-  updateProfile: (body) => call('/account/profile', { method: 'PATCH', body }),
+  googleLogin: (credential) => call('/google-login', { method: 'POST', body: { credential } }),
+  register: (body) => call('/register', { method: 'POST', body }),
+  login: (body) => call('/login', { method: 'POST', body }),
+  logout: () => call('/logout', { method: 'POST' }),
+  me: () => call('/me'),
+  updateProfile: (body) => call('/profile', { method: 'PATCH', body }),
 
   // content
   getNotices: () => call('/notices'),
@@ -125,4 +141,3 @@ export const api = {
     };
   },
 };
-

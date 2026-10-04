@@ -160,7 +160,7 @@ export default function FestivalCalendar() {
 VERSION:2.0
 PRODID:-//Sidheswar Temple Trust//Festival Calendar//EN
 BEGIN:VEVENT
-UID:uid-${fest.id}@siddheswarjagannath.org
+UID:uid-${fest.id}@shreejagannathtemplesidheswar.vercel.app
 DTSTAMP:${dateFormatted}T000000Z
 DTSTART:${dateFormatted}T080000Z
 DTEND:${dateFormatted}T200000Z
@@ -268,7 +268,7 @@ END:VCALENDAR`;
       
       {/* Page Header Banner */}
       <div className="relative bg-temple-dark text-cream-light py-20 border-b border-gold/20 text-center">
-        <div className="absolute inset-0 bg-[url('/assets/rath_yatra.png')] bg-cover bg-center opacity-25"></div>
+        <div className="absolute inset-0 bg-[url('/assets/temple_chariot_sunset.jpg')] bg-cover bg-center opacity-25"></div>
         <div className="relative z-10 max-w-4xl mx-auto px-4">
           <h2 className="text-3xl md:text-5xl font-extrabold font-outfit text-glow text-white">
             {t('festivals')}
@@ -496,11 +496,11 @@ END:VCALENDAR`;
               <div key={fest.id} className="glass-card flex flex-col justify-between overflow-hidden border-b-4 border-transparent hover:border-saffron hover:shadow-md transition-all duration-300">
                 <div className="h-44 bg-slate-200 relative overflow-hidden">
                   <img 
-                    src={fest.imageUrl || "/assets/temple_exterior.png"} 
+                    src={fest.imageUrl || "/assets/temple_spire_flags.jpg"} 
                     alt={fest.festivalNameEnglish} 
                     className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-500"
                     loading="lazy"
-                    onError={(e) => { e.target.src = "/assets/temple_exterior.png"; }}
+                    onError={(e) => { e.target.src = "/assets/temple_spire_flags.jpg"; }}
                   />
                   <div className="absolute top-3 left-3 px-3 py-1 bg-maroon/90 text-gold rounded-full text-xs font-bold font-outfit shadow-md">
                     {new Date(fest.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -633,10 +633,10 @@ END:VCALENDAR`;
               {/* Event Image Banner with containment rule */}
               <div className="h-56 bg-temple-100 dark:bg-temple-darker rounded-xl overflow-hidden border border-saffron/10">
                 <img 
-                  src={selectedFestival.imageUrl || "/assets/temple_exterior.png"} 
+                  src={selectedFestival.imageUrl || "/assets/temple_spire_flags.jpg"} 
                   alt={selectedFestival.festivalNameEnglish}
                   className="w-full h-full object-contain object-center"
-                  onError={(e) => { e.target.src = "/assets/temple_exterior.png"; }}
+                  onError={(e) => { e.target.src = "/assets/temple_spire_flags.jpg"; }}
                 />
               </div>
 
@@ -717,7 +717,7 @@ END:VCALENDAR`;
                     <span>Emergency Contact Office</span>
                   </h4>
                   <p className="text-xs text-temple-600 dark:text-cream-light/70 leading-relaxed font-semibold">
-                    Office Contact: {selectedFestival.contactInformation || '+91 94371 99999'}
+                    Office Contact: {selectedFestival.contactInformation || '+91 93378 22942'}
                   </p>
                 </div>
               </div>

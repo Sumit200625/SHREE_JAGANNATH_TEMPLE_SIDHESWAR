@@ -95,8 +95,6 @@ export default function Home() {
     { src: '/assets/jagannath_sanctum_seva.jpg', alt: 'Lord Jagannath adorned with Tulasi' },
     { src: '/assets/deity_procession_close.jpg', alt: 'Lord Jagannath Procession' },
     { src: '/assets/procession_night_street.jpg', alt: 'Night Procession with Devotees' },
-    { src: '/assets/hanuman_shrine.jpg', alt: 'Hanuman Shrine' },
-    { src: '/assets/rath_yatra.png', alt: 'Rath Yatra' },
   ];
 
   return (
@@ -104,7 +102,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-temple-dark text-cream-light py-24 md:py-32">
         <div
-          className="absolute inset-0 bg-[url('/assets/hero_jagannath.png')] bg-cover bg-center opacity-30"
+          className="absolute inset-0 bg-[url('/assets/jagannath_tulasi_closeup.jpg')] bg-cover bg-center opacity-30"
           aria-hidden="true"
         ></div>
         <div className="relative z-10 max-w-5xl mx-auto px-4 text-center">
@@ -239,7 +237,7 @@ export default function Home() {
             <ImageIcon size={22} className="text-gold" />
             {t('photoGalleryPreview')}
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {galleryPreview.map((img) => (
               <div
                 key={img.src}

@@ -14,5 +14,5 @@ export const DONATION_CATEGORIES = [
   "general_fund", "anna_daan", "festival_fund", "construction_fund", "cleanliness_fund", "charity",
 ];
 
-export const MIN_DONATION = 10;       // INR
+export const MIN_DONATION = 50;       // INR
 export const MAX_DONATION = 500000;   // INR per online payment

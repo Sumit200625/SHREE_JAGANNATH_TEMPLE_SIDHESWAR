@@ -22,7 +22,7 @@ export default function PlanYourVisit() {
       
       {/* Page Header */}
       <div className="relative bg-temple-dark text-cream-light py-20 border-b border-gold/20 text-center">
-        <div className="absolute inset-0 bg-[url('/assets/temple_exterior.png')] bg-cover bg-center opacity-25"></div>
+        <div className="absolute inset-0 bg-[url('/assets/temple_chariot_sunset.jpg')] bg-cover bg-center opacity-25"></div>
         <div className="relative z-10 max-w-4xl mx-auto px-4">
           <h2 className="text-3xl md:text-5xl font-extrabold font-outfit text-glow text-white">
             {t('visit')}
@@ -164,7 +164,7 @@ export default function PlanYourVisit() {
             </div>
             <ul className="text-[11px] text-amber-700 leading-relaxed font-semibold space-y-1">
               <li>Emergency Helpdesk: +91 93378 22942</li>
-              <li>Digapahandi Police Station: 112 / +91 6814 24XXXX</li>
+              <li>Police / Emergency: 112</li>
               <li>Ambulance Emergency: 108</li>
             </ul>
           </div>

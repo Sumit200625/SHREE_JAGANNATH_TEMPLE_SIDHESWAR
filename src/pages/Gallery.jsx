@@ -16,7 +16,7 @@ function ImageWithSkeleton({ src, alt, className }) {
         </div>
       )}
       <img
-        src={error ? "/assets/temple_exterior.png" : src}
+        src={error ? "/assets/temple_spire_flags.jpg" : src}
         alt={alt}
         loading="lazy"
         onLoad={() => setLoaded(true)}
@@ -146,7 +146,7 @@ export default function Gallery() {
       
       {/* Page Header */}
       <div className="relative bg-temple-dark text-cream-light py-20 border-b border-gold/20 text-center">
-        <div className="absolute inset-0 bg-[url('/assets/temple_exterior.png')] bg-cover bg-center opacity-25"></div>
+        <div className="absolute inset-0 bg-[url('/assets/temple_chariot_sunset.jpg')] bg-cover bg-center opacity-25"></div>
         <div className="relative z-10 max-w-4xl mx-auto px-4">
           <h2 className="text-3xl md:text-5xl font-extrabold font-outfit text-glow text-white">
             {t('gallery')}

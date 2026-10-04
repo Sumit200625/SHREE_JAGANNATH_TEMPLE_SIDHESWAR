@@ -40,7 +40,7 @@ const translations = {
     error: "Error",
     
     // Home Page
-    heroSubtitle: "Welcome to the Sacred Abode of Lord Jagannath, Balabhadra & Devi Subhadra in Ganjam",
+    heroSubtitle: "Welcome to the Sacred Abode of Lord Jagannath (Patitapavan) in Ganjam",
     dailyTimings: "Daily Darshan Timings",
     morningAarti: "Morning Aarti",
     noonBhoga: "Noon Bhoga",
@@ -61,8 +61,8 @@ const translations = {
     hundiTitle: "Digital Hundi / Donation Portal",
     hundiDesc: "Support the daily seva, prasad distribution, and temple stone boundary wall construction.",
     mapsTitle: "Locate Us on Maps",
-    quoteText: "|| Nilachala Nivasaya Nityaya Paramatmane | Balabhadra Subhadrabhyam Jagannathaya Te Namah ||",
-    quoteTranslation: "\"Salutations to Lord Jagannath, the supreme soul residing eternally in Nilachala, along with His divine siblings Balabhadra and Subhadra.\"",
+    quoteText: "|| Jai Jagannath ||",
+    quoteTranslation: "Victory to Lord Jagannath, Patitapavan — the redeemer of the fallen.",
 
     // Seva Page
     sevaBookingTitle: "Online Seva & Puja Booking",
@@ -147,7 +147,7 @@ const translations = {
     error: "ତ୍ରୁଟି",
 
     // Home Page
-    heroSubtitle: "ଗଞ୍ଜାମର ପବିତ୍ର ପ୍ରଭୁ ଶ୍ରୀ ଜଗନ୍ନାଥ, ବଳଭଦ୍ର ଓ ଦେବୀ ସୁଭଦ୍ରାଙ୍କ ମନ୍ଦିରକୁ ଆପଣଙ୍କୁ ସ୍ୱାଗତ",
+    heroSubtitle: "ଗଞ୍ଜାମରେ ପତିତପାବନ ପ୍ରଭୁ ଶ୍ରୀ ଜଗନ୍ନାଥଙ୍କ ପବିତ୍ର ମନ୍ଦିରକୁ ଆପଣଙ୍କୁ ସ୍ୱାଗତ",
     dailyTimings: "ଦୈନିକ ଦର୍ଶନ ସମୟ ସୂଚୀ",
     morningAarti: "ମଙ୍ଗଳ ଆଳତି",
     noonBhoga: "ମଧ୍ୟାହ୍ନ ମହାପ୍ରସାଦ",
@@ -168,8 +168,8 @@ const translations = {
     hundiTitle: "ଡିଜିଟାଲ୍ ଦାନ ହୁଣ୍ଡି ପୋର୍ଟାଲ୍",
     hundiDesc: "ମନ୍ଦିରର ଦୈନିକ ନୀତିକାନ୍ତି, ଅନ୍ନପ୍ରସାଦ ବିତରଣ ଏବଂ ପଥର ମେଘନାଦ ପାଚେରୀ ନିର୍ମାଣ ପାଇଁ ଦାନ କରନ୍ତୁ।",
     mapsTitle: "ମାନଚିତ୍ରରେ ଆମର ଅବସ୍ଥିତି",
-    quoteText: "|| ନୀଳାଚଳ ନିବାସାୟ ନିତ୍ୟାୟ ପରମାତ୍ମନେ । ବଳଭଦ୍ର ସୁଭଦ୍ରାଭ୍ୟାଂ ଜଗନ୍ନାଥାୟ ତେ ନମଃ ॥",
-    quoteTranslation: "\"ନୀଳାଚଳରେ ଅନନ୍ତ କାଳ ଧରି ବିରାଜମାନ ପରମାତ୍ମା ପ୍ରଭୁ ଜଗନ୍ନାଥ, ଭ୍ରାତା ବଳଭଦ୍ର ଓ ଭଗିନୀ ସୁଭଦ୍ରାଙ୍କୁ ବାରମ୍ବାର ପ୍ରଣାମ।\"",
+    quoteText: "|| ଜୟ ଜଗନ୍ନାଥ ||",
+    quoteTranslation: "ପତିତପାବନ ପ୍ରଭୁ ଶ୍ରୀ ଜଗନ୍ନାଥଙ୍କ ଜୟ ହେଉ।",
 
     // Seva Page
     sevaBookingTitle: "ଅନଲାଇନ୍ ସେବା ଓ ପୂଜା ବୁକିଂ",
@@ -254,7 +254,7 @@ const translations = {
     error: "त्रुटि",
 
     // Home Page
-    heroSubtitle: "गंजम में भगवान जगन्नाथ, बलभद्र और देवी सुभद्रा के पवित्र निवास में आपका स्वागत है",
+    heroSubtitle: "गंजम में पतितपावन भगवान जगन्नाथ के पवित्र निवास में आपका स्वागत है",
     dailyTimings: "दैनिक दर्शन समय",
     morningAarti: "मंगला आरती",
     noonBhoga: "मध्याह्न भोग",
@@ -275,8 +275,8 @@ const translations = {
     hundiTitle: "डिजिटल हुंडी / दान पोर्टल",
     hundiDesc: "दैनिक सेवा, महाप्रसाद वितरण और मंदिर की पत्थर की चारदीवारी के निर्माण में योगदान दें।",
     mapsTitle: "मानचित्र पर हमारी स्थिति",
-    quoteText: "|| नीलाचल निवासाय नित्याय परमात्मने | बलभद्र सुभद्राभ्याम् जगन्नाथाय ते नमः ||",
-    quoteTranslation: "\"नीलाचल धाम में शाश्वत निवास करने वाले परमपिता भगवान जगन्नाथ, भ्राता बलभद्र और भगिनी सुभद्रा को कोटि-कोटि नमन।\"",
+    quoteText: "|| जय जगन्नाथ ||",
+    quoteTranslation: "पतितपावन भगवान जगन्नाथ की जय हो।",
 
     // Seva Page
     sevaBookingTitle: "ऑनलाइन सेवा और पूजा बुकिंग",

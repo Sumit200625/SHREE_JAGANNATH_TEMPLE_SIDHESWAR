@@ -2,7 +2,9 @@
 async function call(path, { method = 'GET', body, raw, headers } = {}) {
   let res;
   try {
-    res = await fetch(`/api${path}`, {
+       const [p, qs] = path.split('?');
+    const url = '/api/index?__p=' + encodeURIComponent(p.replace(/^\//, '')) + (qs ? '&' + qs : '');
+    res = await fetch(url, {
       method,
       credentials: 'same-origin',
       headers: raw ? headers : { ...(body ? { 'Content-Type': 'application/json' } : {}), ...headers },

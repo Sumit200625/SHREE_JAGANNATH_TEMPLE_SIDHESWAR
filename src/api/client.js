@@ -1,8 +1,8 @@
-// Real API client. Auth uses single-level paths: /register /login /logout /me /google-login /profile
+// Real API client (replaces the old localStorage mockApi). Same method names, so pages keep working.
 async function call(path, { method = 'GET', body, raw, headers } = {}) {
   let res;
   try {
-       const [p, qs] = path.split('?');
+    const [p, qs] = path.split('?');
     const url = '/api/index?__p=' + encodeURIComponent(p.replace(/^\//, '')) + (qs ? '&' + qs : '');
     res = await fetch(url, {
       method,
@@ -100,6 +100,13 @@ export const api = {
   createNotice: (body) => call('/notices', { method: 'POST', body }),
   updateNotice: (id, body) => call(`/notices/${id}`, { method: 'PATCH', body }),
   deleteNotice: (id) => call(`/notices/${id}`, { method: 'DELETE' }),
+  uploadPdf: (file) => call('/upload-pdf', { method: 'POST', raw: file, headers: { 'Content-Type': 'application/pdf' } }),
+  sendNotice: (id, channels) => call(`/notices/${id}/send`, { method: 'POST', body: channels }),
+  notifyConfig: () => call('/notify-config'),
+  subscribe: (contact) => call('/subscribe', { method: 'POST', body: { contact } }),
+  getSubscribers: () => call('/subscribers'),
+  deleteSubscriber: (id) => call(`/subscribers/${id}`, { method: 'DELETE' }),
+  getDevotees: () => call('/devotees'),
   getFestivals: () => call('/festivals'),
   getFAQs: () => call('/faqs'),
   addFAQ: (body) => call('/faqs', { method: 'POST', body }),

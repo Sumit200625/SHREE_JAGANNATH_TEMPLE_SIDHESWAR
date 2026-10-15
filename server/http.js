@@ -10,6 +10,13 @@ export function send(res, status, body, headers = {}) {
   res.end(JSON.stringify(body));
 }
 
+export function sendHtml(res, status, html) {
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  res.end(html);
+}
+
 export async function readRaw(req, limit = 64 * 1024) {
   const chunks = [];
   let size = 0;

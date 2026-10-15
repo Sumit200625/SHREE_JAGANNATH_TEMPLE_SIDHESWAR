@@ -16,6 +16,7 @@ const navItems = [
   { path: '/about', labelKey: 'about' },
   { path: '/darshan', labelKey: 'darshan' },
   { path: '/festivals', labelKey: 'festivals' },
+  { path: '/panchang', labelKey: 'panchang' },
   { path: '/seva', labelKey: 'seva' },
   { path: '/donation', labelKey: 'donation' },
   { path: '/prasad', labelKey: 'prasad' },
@@ -64,7 +65,7 @@ export default function Header() {
   // The drawer is rendered in a portal on <body>. (Inside the sticky/blurred header, "position: fixed"
   // gets trapped by backdrop-filter, which is why only one menu item used to show on phones.)
   const drawer = menuOpen && createPortal(
-    <div className="fixed inset-0 z-[100] xl:hidden" role="dialog" aria-modal="true" aria-label="Menu">
+    <div className="fixed inset-0 z-[100] min-[1400px]:hidden" role="dialog" aria-modal="true" aria-label="Menu">
       <div className="absolute inset-0 bg-black/50" onClick={close} />
       <aside className="absolute right-0 top-0 h-full w-[84%] max-w-sm bg-cream-light dark:bg-temple-darker shadow-2xl flex flex-col animate-[slideIn_.22s_ease-out]">
         <div className="flex items-center justify-between px-4 py-3 border-b border-saffron/15 bg-maroon text-cream-light">
@@ -161,7 +162,7 @@ export default function Header() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden xl:flex items-center space-x-1">
+        <nav className="hidden min-[1400px]:flex items-center space-x-1">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
@@ -178,7 +179,7 @@ export default function Header() {
         </nav>
 
         {/* Desktop right controls */}
-        <div className="hidden xl:flex items-center space-x-3">
+        <div className="hidden min-[1400px]:flex items-center space-x-3">
           <div className="relative">
             <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-1.5 px-3 py-1.5 border border-saffron/30 bg-white rounded-full text-sm font-semibold text-temple-800">
               <Globe size={16} className="text-saffron" />
@@ -212,7 +213,7 @@ export default function Header() {
           onClick={() => setMenuOpen(true)}
           aria-label="Open menu"
           aria-expanded={menuOpen}
-          className="xl:hidden shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-saffron text-white shadow-md active:scale-95"
+          className="min-[1400px]:hidden shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-saffron text-white shadow-md active:scale-95"
         >
           <Menu size={24} />
         </button>

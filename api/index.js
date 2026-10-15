@@ -4,9 +4,10 @@ import { put } from '@vercel/blob';
 import { db, ensureReady, listDocs, getDoc, insertDoc, patchDoc, deleteDoc } from '../server/db.js';
 import {
   startSession, endSession, currentUser, requireUser, requireRole, publicUser,
-  verifyGoogleCredential, newId,
+  verifyGoogleCredential, newId, OFFICIAL_ADMIN,
 } from '../server/auth.js';
-import { HttpError, send, readJson, readRaw, str, isEmail, isPhone, rateLimit } from '../server/http.js';
+import { HttpError, send, sendHtml, readJson, readRaw, str, isEmail, isPhone, rateLimit } from '../server/http.js';
+import { emailConfigured, whatsappConfigured, sendEmails, sendWhatsApp } from '../server/notify.js';
 import {
   paymentsEnabled, createOrder, verifyCheckoutSignature, verifyWebhookSignature,
   fulfill, getOrder, publicDonation, refund,
@@ -24,12 +25,25 @@ async function audit(user, action, description) {
   });
 }
 
+// Only accept PDF links that were uploaded through our own upload endpoint (blocks javascript: and other URLs)
+function cleanPdfUrl(v) {
+  const s = str(v, 600);
+  if (!s || s === '#') return '#';
+  try {
+    const u = new URL(s);
+    if (u.protocol === 'https:' && u.hostname.endsWith('.public.blob.vercel-storage.com')) return s;
+  } catch { /* fall through */ }
+  throw new HttpError(400, 'Invalid PDF link. Please upload the PDF using the attach button.');
+}
+
 async function upsertGoogleUser(p) {
   const sql = db();
   const email = p.email.toLowerCase();
   const found = await sql`SELECT * FROM users WHERE google_sub = ${p.sub} OR email = ${email} LIMIT 1`;
   if (found[0]) {
+    // If this email was registered earlier with a password (never verified), the password is dropped once Google proves ownership.
     const rows = await sql`UPDATE users SET google_sub = ${p.sub}, picture = ${p.picture || null},
+      password_hash = CASE WHEN google_sub IS NULL THEN NULL ELSE password_hash END,
       name = COALESCE(NULLIF(name, ''), ${p.name || email}) WHERE id = ${found[0].id} RETURNING *`;
     return rows[0];
   }
@@ -39,7 +53,7 @@ async function upsertGoogleUser(p) {
 }
 
 async function route(req, res, method, path, url) {
-  const seg = path.split('/').filter(Boolean);
+  const seg = path.split('/').filter(Boolean); // e.g. ['auth','google']
   const [a, b, c] = seg;
   const key = `${method} /${a || ''}${b ? '/' + b : ''}`;
 
@@ -47,7 +61,7 @@ async function route(req, res, method, path, url) {
   if (key === 'GET /config')
     return send(res, 200, { googleClientId: process.env.GOOGLE_CLIENT_ID || '', paymentsEnabled: paymentsEnabled() });
 
-  // ---------------- auth (single-level paths) ----------------
+  // ---------------- auth ----------------
   if (key === 'POST /google-login') {
     rateLimit(req, 'login', 20, 60_000);
     const { credential } = await readJson(req);
@@ -62,6 +76,7 @@ async function route(req, res, method, path, url) {
     const name = str(d.name, 80), email = str(d.email, 254).toLowerCase(), phone = str(d.phone, 10), pw = String(d.password || '');
     if (!name) throw new HttpError(400, 'Name is required.');
     if (!isEmail(email)) throw new HttpError(400, 'Enter a valid email address.');
+    if (email === OFFICIAL_ADMIN) throw new HttpError(403, 'This email can only sign in with "Continue with Google".');
     if (!isPhone(phone)) throw new HttpError(400, 'Enter a valid 10-digit Indian mobile number.');
     if (pw.length < 8 || pw.length > 72) throw new HttpError(400, pw.length < 8 ? 'Password must be at least 8 characters.' : 'Password is too long (maximum 72 characters).');
     const hash = await bcrypt.hash(pw, 11);
@@ -79,6 +94,7 @@ async function route(req, res, method, path, url) {
     rateLimit(req, 'login', 10, 60_000);
     const d = await readJson(req);
     const email = str(d.email, 254).toLowerCase();
+    if (email === OFFICIAL_ADMIN) throw new HttpError(403, 'The temple administrator must sign in with "Continue with Google".');
     const rows = await db()`SELECT * FROM users WHERE email = ${email}`;
     const u = rows[0];
     const ok = u?.password_hash && (await bcrypt.compare(String(d.password || ''), u.password_hash));
@@ -105,10 +121,10 @@ async function route(req, res, method, path, url) {
     if (!str(d.titleEn)) throw new HttpError(400, 'Title is required.');
     const doc = await insertDoc('notice', newId('not'), {
       titleEn: str(d.titleEn, 200), contentEn: str(d.contentEn, 4000),
-      titleOr: str(d.titleOr, 200), contentOr: str(d.contentOr, 4000),
-      titleHi: str(d.titleHi, 200), contentHi: str(d.contentHi, 4000),
+      titleOr: str(d.titleOr, 200) || str(d.titleEn, 200), contentOr: str(d.contentOr, 4000) || str(d.contentEn, 4000),
+      titleHi: str(d.titleHi, 200) || str(d.titleEn, 200), contentHi: str(d.contentHi, 4000) || str(d.contentEn, 4000),
       category: str(d.category, 30) || 'general', isPinned: !!d.isPinned,
-      publishDate: new Date().toISOString().slice(0, 10), expiryDate: str(d.expiryDate, 10) || '', pdfUrl: str(d.pdfUrl, 500) || '#',
+      publishDate: new Date().toISOString().slice(0, 10), expiryDate: str(d.expiryDate, 10) || '', pdfUrl: cleanPdfUrl(d.pdfUrl),
     });
     await audit(me, 'CREATE_NOTICE', `Created announcement: ${doc.titleEn}`);
     return send(res, 201, doc);
@@ -117,7 +133,8 @@ async function route(req, res, method, path, url) {
     const me = await requireRole(req, NOTICE);
     const d = await readJson(req);
     const patch = {};
-    for (const k of ['titleEn', 'contentEn', 'titleOr', 'contentOr', 'titleHi', 'contentHi', 'category', 'expiryDate', 'pdfUrl']) if (k in d) patch[k] = str(d[k], 4000);
+    for (const k of ['titleEn', 'contentEn', 'titleOr', 'contentOr', 'titleHi', 'contentHi', 'category', 'expiryDate']) if (k in d) patch[k] = str(d[k], 4000);
+    if ('pdfUrl' in d) patch.pdfUrl = cleanPdfUrl(d.pdfUrl);
     if ('isPinned' in d) patch.isPinned = !!d.isPinned;
     const doc = await patchDoc('notice', b, patch);
     if (!doc) throw new HttpError(404, 'Notice not found.');
@@ -130,6 +147,116 @@ async function route(req, res, method, path, url) {
     if (!(await deleteDoc('notice', b))) throw new HttpError(404, 'Notice not found.');
     await audit(me, 'DELETE_NOTICE', `Deleted announcement: ${old?.titleEn}`);
     return send(res, 200, { success: true });
+  }
+
+  // ---------------- PDF attachment for notices (admin) ----------------
+  if (key === 'POST /upload-pdf') {
+    const me = await requireRole(req, NOTICE);
+    rateLimit(req, 'upload', 15, 60_000);
+    const type = String(req.headers['content-type'] || '').split(';')[0].toLowerCase();
+    if (type !== 'application/pdf') throw new HttpError(415, 'Only PDF files are allowed.');
+    const buf = await readRaw(req, 4_200_000);
+    if (buf.length < 100 || buf.subarray(0, 5).toString() !== '%PDF-') throw new HttpError(400, 'File content does not look like a PDF.');
+    const blob = await put(`notices/${me.id}-${crypto.randomBytes(6).toString('hex')}.pdf`, buf, {
+      access: 'public', contentType: 'application/pdf', addRandomSuffix: true,
+    });
+    return send(res, 201, { url: blob.url });
+  }
+
+  // ---------------- send a notice to subscribers (admin) ----------------
+  if (a === 'notices' && b && c === 'send' && method === 'POST') {
+    const me = await requireRole(req, NOTICE);
+    rateLimit(req, 'broadcast', 6, 60_000);
+    const d = await readJson(req);
+    const n = await getDoc('notice', b);
+    if (!n) throw new HttpError(404, 'Notice not found.');
+    const subs = (await listDocs('subscriber', 20000)).filter((s) => s.active);
+    const baseUrl = process.env.SITE_URL || `https://${req.headers.host}`;
+    const messages = [{ title: n.titleEn, body: n.contentEn }];
+    if (n.titleOr && n.titleOr !== n.titleEn) messages.push({ title: n.titleOr, body: n.contentOr });
+    if (n.titleHi && n.titleHi !== n.titleEn) messages.push({ title: n.titleHi, body: n.contentHi });
+    const result = {};
+    if (d.email) {
+      const list = subs.filter((s) => s.type === 'email');
+      result.email = { total: list.length, ...(await sendEmails(list.slice(0, 300), messages, baseUrl)) };
+    }
+    if (d.whatsapp) {
+      const list = subs.filter((s) => s.type === 'phone');
+      result.whatsapp = { total: list.length, ...(await sendWhatsApp(list.slice(0, 300), n.titleEn, n.contentEn)) };
+    }
+    await audit(me, 'SEND_NOTICE', `Sent notice "${n.titleEn}" ${JSON.stringify(result)}`);
+    return send(res, 200, result);
+  }
+
+  // ---------------- subscribers ----------------
+  if (key === 'POST /subscribe') {
+    rateLimit(req, 'subscribe', 8, 60_000);
+    const d = await readJson(req);
+    const raw = str(d.contact, 254);
+    let type, value;
+    if (raw.includes('@')) {
+      value = raw.toLowerCase();
+      if (!isEmail(value)) throw new HttpError(400, 'Enter a valid email address.');
+      type = 'email';
+    } else {
+      value = raw.replace(/\D/g, '');
+      if (value.length === 12 && value.startsWith('91')) value = value.slice(2);
+      if (!isPhone(value)) throw new HttpError(400, 'Enter a valid 10-digit mobile number or an email address.');
+      type = 'phone';
+    }
+    const id = crypto.createHash('sha256').update(type + ':' + value).digest('hex').slice(0, 20);
+    const existing = await getDoc('subscriber', id);
+    if (existing) {
+      if (!existing.active) await patchDoc('subscriber', id, { active: true });
+    } else {
+      try {
+        await insertDoc('subscriber', id, { type, value, token: crypto.randomBytes(16).toString('hex'), active: true, createdAt: new Date().toISOString() });
+      } catch (e) { if (!String(e.message).includes('duplicate')) throw e; }
+    }
+    return send(res, 200, { ok: true });
+  }
+  if (key === 'GET /unsubscribe') {
+    const t = str(url.searchParams.get('t'), 64);
+    const rows = t ? await db()`SELECT id FROM docs WHERE kind = 'subscriber' AND data->>'token' = ${t}` : [];
+    if (rows[0]) await patchDoc('subscriber', rows[0].id, { active: false });
+    return sendHtml(res, 200, `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Unsubscribed</title>
+      <body style="font-family:Arial,sans-serif;background:#fffdf0;color:#3b2417;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0">
+      <div style="max-width:420px;text-align:center;padding:24px"><h2 style="color:#7a0f0f">Shree Jagannath Temple Sidheswar</h2>
+      <p>${rows[0] ? 'You have been unsubscribed. You will no longer receive temple notices.' : 'This unsubscribe link is not valid or was already used.'}</p>
+      <p><a href="/" style="color:#e35f24;font-weight:bold">Go to website</a></p></div></body>`);
+  }
+  if (key === 'GET /subscribers') {
+    await requireRole(req, ['super_admin']);
+    return send(res, 200, (await listDocs('subscriber', 20000)).map(({ token, ...s }) => s));
+  }
+  if (a === 'subscribers' && b && method === 'DELETE') {
+    const me = await requireRole(req, ['super_admin']);
+    if (!(await deleteDoc('subscriber', b))) throw new HttpError(404, 'Subscriber not found.');
+    await audit(me, 'DELETE_SUBSCRIBER', 'Removed a subscriber');
+    return send(res, 200, { success: true });
+  }
+  if (key === 'GET /notify-config') {
+    await requireRole(req, NOTICE);
+    const subs = (await listDocs('subscriber', 20000)).filter((s) => s.active);
+    return send(res, 200, {
+      email: emailConfigured(), whatsapp: whatsappConfigured(),
+      subscribers: { email: subs.filter((s) => s.type === 'email').length, phone: subs.filter((s) => s.type === 'phone').length },
+    });
+  }
+
+  // ---------------- registered devotees (admin only) ----------------
+  if (key === 'GET /devotees') {
+    await requireRole(req, ['super_admin']);
+    const sql = db();
+    const users = await sql`SELECT id, name, email, phone, gotra, address, created_at, (google_sub IS NOT NULL) AS google FROM users ORDER BY created_at DESC LIMIT 5000`;
+    const don = await sql`SELECT data->>'userId' AS uid, count(*)::int AS cnt, COALESCE(sum((data->>'amount')::numeric), 0)::float AS total
+                          FROM docs WHERE kind = 'donation' AND data->>'userId' IS NOT NULL GROUP BY 1`;
+    const sev = await sql`SELECT data->>'userId' AS uid, count(*)::int AS cnt FROM docs WHERE kind = 'seva' AND data->>'userId' IS NOT NULL GROUP BY 1`;
+    const dm = Object.fromEntries(don.map((r) => [r.uid, r]));
+    const sm = Object.fromEntries(sev.map((r) => [r.uid, r]));
+    return send(res, 200, users.map((u) => ({
+      ...u, donationCount: dm[u.id]?.cnt || 0, donationTotal: dm[u.id]?.total || 0, sevaCount: sm[u.id]?.cnt || 0,
+    })));
   }
 
   // ---------------- festivals ----------------
@@ -326,6 +453,8 @@ async function route(req, res, method, path, url) {
     const kinds = ['notice', 'festival', 'seva', 'donation', 'gallery', 'faq', 'ticket', 'audit'];
     const out = {};
     for (const k of kinds) out[k] = await listDocs(k, 100000);
+    out.subscriber = (await listDocs('subscriber', 100000)).map(({ token, ...x }) => x);
+    out.users = await db()`SELECT id, name, email, phone, gotra, address, created_at FROM users ORDER BY created_at DESC`;
     await audit(me, 'BACKUP', 'Downloaded database backup');
     return send(res, 200, out);
   }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
+import AdminPeople from '../components/AdminPeople';
 import { Image as ImageIcon, BarChart, Users, Bell, Gift, Heart, ShieldAlert, Award, FileText, CheckCircle2, XCircle, Database, HelpCircle, FileCheck, ClipboardList, Trash2, Edit } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -184,6 +185,7 @@ export default function AdminDashboard() {
     { code: 'sevas', label: 'Manage Sevas', icon: Gift, roles: ['super_admin', 'seva_manager'] },
     { code: 'donations', label: 'Manage Donations', icon: Heart, roles: ['super_admin', 'donation_manager'] },
     { code: 'notices', label: 'Manage Notices', icon: Bell, roles: ['super_admin', 'content_editor', 'notice_manager'] },
+    { code: 'devotees', label: 'Devotees & Subscribers', icon: Users, roles: ['super_admin'] },
     { code: 'tickets', label: 'Grievance Hotline', icon: ClipboardList, roles: ['super_admin', 'content_editor'] },
     { code: 'gallery', label: 'Photo Moderation', icon: ImageIcon, roles: ['super_admin', 'content_editor'] },
     { code: 'faqs', label: 'Edit FAQs', icon: HelpCircle, roles: ['super_admin', 'content_editor'] },
@@ -570,6 +572,8 @@ export default function AdminDashboard() {
         )}
 
         {/* 5. Grievance Hotline */}
+        {activeTab === 'devotees' && <AdminPeople />}
+
         {activeTab === 'tickets' && (
           <div className="space-y-6 animate-fade-in">
             <div className="glass-card p-6 border-t-4 border-maroon">

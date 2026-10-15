@@ -27,19 +27,11 @@ function readCookie(req, name) {
   return m ? m.slice(name.length + 1) : null;
 }
 
-// ---- staff roles come from environment variables (verified Google accounts only) ----
-//   ADMIN_EMAILS = "head@gmail.com,other@gmail.com"                      -> super_admin
-//   STAFF_ROLES  = "a@gmail.com:seva_manager,b@gmail.com:donation_manager,c@gmail.com:content_editor,d@gmail.com:notice_manager"
-const list = (v) => (v || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+// ---- Only ONE admin: the temple's official Gmail (and only when signed in with Google). Everyone else is a devotee. ----
+export const OFFICIAL_ADMIN = 'shreejagannathtemplesiddheswar@gmail.com';
 function staffRole(email, googleVerified) {
   if (!email || !googleVerified) return 'devotee';
-  const e = email.toLowerCase();
-  if (list(process.env.ADMIN_EMAILS).includes(e)) return 'super_admin';
-  for (const pair of list(process.env.STAFF_ROLES)) {
-    const [mail, role] = pair.split(':');
-    if (mail === e && ['seva_manager', 'donation_manager', 'content_editor', 'notice_manager'].includes(role)) return role;
-  }
-  return 'devotee';
+  return email.toLowerCase() === OFFICIAL_ADMIN ? 'super_admin' : 'devotee';
 }
 
 export function publicUser(u) {

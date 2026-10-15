@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../api/client';
+import SubscribeBox from '../components/SubscribeBox';
+import PanchangCard from '../components/PanchangCard';
 import {
   Clock,
   MapPin,
@@ -23,8 +25,6 @@ export default function Home() {
     seconds: 0,
   });
   const [notices, setNotices] = useState([]);
-  const [subscribeValue, setSubscribeValue] = useState('');
-  const [subscribed, setSubscribed] = useState(false);
 
   // Temple open/closed status (simple daytime check for demo purposes)
   const currentHour = new Date().getHours();
@@ -73,13 +73,6 @@ export default function Home() {
       isMounted = false;
     };
   }, []);
-
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (!subscribeValue.trim()) return;
-    setSubscribed(true);
-    setSubscribeValue('');
-  };
 
   const timings = [
     { key: 'morningAarti', time: '5:00 AM' },
@@ -258,37 +251,11 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Subscribe */}
-        <section className="glass-card rounded-2xl p-8 md:p-12 text-center shadow-md">
-          <h2 className="text-2xl font-bold font-outfit mb-2 flex items-center justify-center gap-2">
-            <Mail size={20} className="text-gold" />
-            {t('subscribeTitle')}
-          </h2>
-          <p className="text-temple-500 mb-6 max-w-xl mx-auto">{t('subscribeDesc')}</p>
+        {/* Today's Panchang */}
+        <PanchangCard />
 
-          {subscribed ? (
-            <p className="text-green-700 font-semibold">{t('success')}</p>
-          ) : (
-            <form
-              onSubmit={handleSubscribe}
-              className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto"
-            >
-              <input
-                type="text"
-                value={subscribeValue}
-                onChange={(e) => setSubscribeValue(e.target.value)}
-                placeholder={t('subscribePlaceholder')}
-                className="flex-grow px-4 py-3 rounded-full border border-gold/30 bg-cream text-temple-900 focus:outline-none focus:ring-2 focus:ring-gold"
-              />
-              <button
-                type="submit"
-                className="px-6 py-3 rounded-full bg-saffron hover:bg-saffron-dark text-white font-semibold transition-colors"
-              >
-                {t('subscribeBtn')}
-              </button>
-            </form>
-          )}
-        </section>
+        {/* Subscribe */}
+        <SubscribeBox />
 
         {/* Fraud Warning */}
         <section className="text-center text-sm text-maroon border border-maroon/30 rounded-xl p-4 max-w-3xl mx-auto flex items-center justify-center gap-2">

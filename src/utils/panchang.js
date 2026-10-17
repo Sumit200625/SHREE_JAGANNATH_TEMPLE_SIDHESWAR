@@ -64,6 +64,8 @@ function segments(f, from, until, limit = 6) {
   return out;
 }
 
+export const nextChangePublic = nextChange;
+
 // karana name index: 0 Kimstughna, 1..56 movable (Bava..Vishti x8), 57 Shakuni, 58 Chatushpada, 59 Naga
 // returns 0..10 into KARANA names [Bava, Balava, Kaulava, Taitila, Gara, Vanija, Vishti, Shakuni, Chatushpada, Naga, Kimstughna]
 export function karanaName(i) {

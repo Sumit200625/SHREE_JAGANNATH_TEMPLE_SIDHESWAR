@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import FestivalArt from '../components/FestivalArt';
 import { useLanguage } from '../context/LanguageContext';
 import { api } from '../api/client';
 import { Search, Calendar as CalendarIcon, MapPin, Phone, Clock, AlertTriangle, Grid, List, Download, Share2, Info, ArrowLeft, ArrowRight } from 'lucide-react';
@@ -17,8 +18,8 @@ export default function FestivalCalendar() {
   const [notices, setNotices] = useState([]);
 
   // Monthly Calendar States
-  const [currentCalendarMonth, setCurrentCalendarMonth] = useState(6); // Default to July (month index 6) for 2026 Rath Yatra season
-  const [currentCalendarYear] = useState(2026); // Fixed year 2026
+  const [currentCalendarMonth, setCurrentCalendarMonth] = useState(() => new Date().getMonth());
+  const [currentCalendarYear, setCurrentCalendarYear] = useState(() => new Date().getFullYear());
 
   // Today's Festival State
   const [todaysFestivals, setTodaysFestivals] = useState([]);
@@ -40,7 +41,14 @@ export default function FestivalCalendar() {
 
   // Fetch data
   useEffect(() => {
-    api.getFestivals().then(res => {
+    api.getFestivals().then(async (raw) => {
+      // Dates are calculated from the panchang (Sun/Moon) for this year and the next, so they never go out of date
+      let res = raw;
+      try {
+        const lib = await import('../utils/festivalDates');
+        const y = new Date().getFullYear();
+        res = lib.buildFestivalList(raw, [y, y + 1]);
+      } catch (e) { console.error('Festival calculation failed', e); }
       // Sort festivals chronologically
       const sorted = res.sort((a, b) => new Date(a.date) - new Date(b.date));
       setFestivals(sorted);
@@ -48,8 +56,7 @@ export default function FestivalCalendar() {
       
       // Calculate today's festivals
       const todayStr = new Date().toISOString().split('T')[0];
-      const currentYearToday = todayStr.replace(/^\d{4}/, '2026'); // Map today to 2026 calendar
-      const foundToday = sorted.filter(f => f.date === currentYearToday && f.isPublished);
+      const foundToday = sorted.filter(f => f.date === todayStr && f.isPublished && f.baseId !== 'fest_27');
       setTodaysFestivals(foundToday);
 
       // Find next festival (chronologically today or in the future)
@@ -57,7 +64,7 @@ export default function FestivalCalendar() {
       const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
       const upcoming = sorted.filter(f => {
         const fDate = new Date(f.date).getTime();
-        return fDate >= todayStart && f.isPublished;
+        return fDate >= todayStart && f.isPublished && f.baseId !== 'fest_27';
       });
       if (upcoming.length > 0) {
         setNextFestival(upcoming[0]);
@@ -98,9 +105,11 @@ export default function FestivalCalendar() {
       });
     }
 
-    // Category filter
+    // Category filter (the many Ekadashi / Purnima / Amavasya days are listed only in their own category and in the calendar)
     if (selectedCategory !== 'All') {
       result = result.filter(f => f.category === selectedCategory);
+    } else if (viewMode !== 'calendar' && !searchQuery) {
+      result = result.filter(f => f.category !== 'Ekadashi / Purnima / Amavasya');
     }
 
     setFilteredFestivals(result);
@@ -202,11 +211,11 @@ END:VCALENDAR`;
   };
 
   const handlePrevMonth = () => {
-    setCurrentCalendarMonth(prev => (prev === 0 ? 11 : prev - 1));
+    setCurrentCalendarMonth(prev => { if (prev === 0) { setCurrentCalendarYear(y => y - 1); return 11; } return prev - 1; });
   };
 
   const handleNextMonth = () => {
-    setCurrentCalendarMonth(prev => (prev === 11 ? 0 : prev + 1));
+    setCurrentCalendarMonth(prev => { if (prev === 11) { setCurrentCalendarYear(y => y + 1); return 0; } return prev + 1; });
   };
 
   const renderCalendarGrid = () => {
@@ -495,15 +504,10 @@ END:VCALENDAR`;
             {filteredFestivals.map((fest) => (
               <div key={fest.id} className="glass-card flex flex-col justify-between overflow-hidden border-b-4 border-transparent hover:border-saffron hover:shadow-md transition-all duration-300">
                 <div className="h-44 bg-slate-200 relative overflow-hidden">
-                  <img 
-                    src={fest.imageUrl || "/assets/temple_spire_flags.jpg"} 
-                    alt={fest.festivalNameEnglish} 
-                    className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                    onError={(e) => { e.target.src = "/assets/temple_spire_flags.jpg"; }}
-                  />
+                  <FestivalArt festival={fest} className="w-full h-full hover:scale-105 transition-transform duration-500" />
                   <div className="absolute top-3 left-3 px-3 py-1 bg-maroon/90 text-gold rounded-full text-xs font-bold font-outfit shadow-md">
                     {new Date(fest.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    {fest.dateEnd && ` - ${new Date(fest.dateEnd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
                   </div>
                   {fest.status.includes('Tentative') && (
                     <div className="absolute top-3 right-3 px-2 py-0.5 bg-amber-500/90 text-white rounded text-[9px] font-bold shadow-md">
@@ -632,12 +636,7 @@ END:VCALENDAR`;
             <div className="p-6 space-y-6">
               {/* Event Image Banner with containment rule */}
               <div className="h-56 bg-temple-100 dark:bg-temple-darker rounded-xl overflow-hidden border border-saffron/10">
-                <img 
-                  src={selectedFestival.imageUrl || "/assets/temple_spire_flags.jpg"} 
-                  alt={selectedFestival.festivalNameEnglish}
-                  className="w-full h-full object-contain object-center"
-                  onError={(e) => { e.target.src = "/assets/temple_spire_flags.jpg"; }}
-                />
+                <FestivalArt festival={selectedFestival} tall className="w-full h-full" />
               </div>
 
               {/* Status Alert block */}

@@ -27,7 +27,7 @@ const navItems = [
 ];
 
 const Chakra = ({ className }) => (
-  <svg viewBox="0 0 100 100" className={className}>
+  <svg viewBox="0 0 100 100" width="48" height="48" className={className}>
     <circle cx="50" cy="50" r="45" strokeWidth="3" fill="none" className="stroke-saffron" />
     <circle cx="50" cy="50" r="12" className="fill-gold" />
     <path d="M 50 5 L 50 95 M 5 50 L 95 50 M 18 18 L 82 82 M 18 82 L 82 18" strokeWidth="2.5" className="stroke-saffron" />
@@ -65,7 +65,7 @@ export default function Header() {
   // The drawer is rendered in a portal on <body>. (Inside the sticky/blurred header, "position: fixed"
   // gets trapped by backdrop-filter, which is why only one menu item used to show on phones.)
   const drawer = menuOpen && createPortal(
-    <div className="fixed inset-0 z-[100] min-[1400px]:hidden" role="dialog" aria-modal="true" aria-label="Menu">
+    <div className="fixed inset-0 z-[100] lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
       <div className="absolute inset-0 bg-black/50" onClick={close} />
       <aside className="absolute right-0 top-0 h-full w-[84%] max-w-sm bg-cream-light dark:bg-temple-darker shadow-2xl flex flex-col animate-[slideIn_.22s_ease-out]">
         <div className="flex items-center justify-between px-4 py-3 border-b border-saffron/15 bg-maroon text-cream-light">
@@ -154,32 +154,15 @@ export default function Header() {
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2">
         <Link to="/" className="flex items-center gap-2 sm:gap-3 group min-w-0">
-          <Chakra className="w-9 h-9 sm:w-12 sm:h-12 shrink-0 group-hover:rotate-45 transition-transform duration-700" />
+          <Chakra className="w-9 h-9 sm:w-12 sm:h-12 shrink-0 flex-none block group-hover:rotate-45 transition-transform duration-700" />
           <div className="flex flex-col min-w-0">
             <h1 className="text-sm sm:text-lg md:text-xl font-bold font-outfit text-maroon leading-tight truncate">{t('templeName')}</h1>
             <span className="text-[10px] sm:text-xs text-saffron-dark font-medium truncate">{t('location')}</span>
           </div>
         </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden min-[1400px]:flex items-center space-x-1">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === '/'}
-              className={({ isActive }) =>
-                `px-3 py-2 text-sm font-semibold rounded-lg font-outfit transition-colors ${
-                  isActive ? 'text-saffron bg-saffron/10 border-b-2 border-saffron' : 'text-temple-800 hover:text-saffron hover:bg-saffron/5'
-                }`}
-            >
-              {t(item.labelKey)}
-            </NavLink>
-          ))}
-        </nav>
-
         {/* Desktop right controls */}
-        <div className="hidden min-[1400px]:flex items-center space-x-3">
+        <div className="hidden lg:flex items-center space-x-3">
           <div className="relative">
             <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-1.5 px-3 py-1.5 border border-saffron/30 bg-white rounded-full text-sm font-semibold text-temple-800">
               <Globe size={16} className="text-saffron" />
@@ -213,10 +196,30 @@ export default function Header() {
           onClick={() => setMenuOpen(true)}
           aria-label="Open menu"
           aria-expanded={menuOpen}
-          className="min-[1400px]:hidden shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-saffron text-white shadow-md active:scale-95"
+          className="lg:hidden shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-saffron text-white shadow-md active:scale-95"
         >
           <Menu size={24} />
         </button>
+      </div>
+      {/* Menu row (desktop): separate line so it can never overlap the logo / temple name */}
+      <div className="hidden lg:block border-t border-saffron/10 bg-white/60">
+        <div className="max-w-7xl mx-auto px-4">
+          <nav className="hidden lg:flex flex-wrap items-center justify-center gap-x-1 gap-y-1 py-2">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === '/'}
+                className={({ isActive }) =>
+                  `px-2.5 py-1.5 text-sm font-semibold rounded-lg font-outfit whitespace-nowrap transition-colors ${
+                    isActive ? 'text-saffron bg-saffron/10 border-b-2 border-saffron' : 'text-temple-800 hover:text-saffron hover:bg-saffron/5'
+                  }`}
+              >
+                {t(item.labelKey)}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
       </div>
       {drawer}
     </header>

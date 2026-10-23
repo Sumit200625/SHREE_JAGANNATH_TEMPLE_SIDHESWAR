@@ -31,7 +31,7 @@ async function runPool(items, worker, size = 3) {
 // messages = [{ title, body }, ...]  (English first, then Odia / Hindi if available)
 export async function sendEmails(recipients, messages, baseUrl, opts = {}) {
   if (!emailConfigured()) throw new HttpError(503, 'Email sending is not set up yet (GMAIL_APP_PASSWORD missing on the server).');
-  let sent = 0, failed = 0;
+  let sent = 0, failed = 0, error = '';
   const subject = opts.subject || 'Temple Notice: ' + messages[0].title;
   await runPool(recipients, async (r) => {
     const unsub = r.unsubUrl || `${baseUrl}/api/index?__p=unsubscribe&t=${r.token}`;
@@ -52,17 +52,18 @@ export async function sendEmails(recipients, messages, baseUrl, opts = {}) {
       sent++;
     } catch (e) {
       failed++;
+      error ||= String(e.message || 'send failed').slice(0, 180);
       console.error('email failed:', e.message);
     }
   });
-  return { sent, failed };
+  return { sent, failed, error };
 }
 
 // Uses the official WhatsApp Business Cloud API with an approved TEMPLATE that has 2 body variables: {{1}} title, {{2}} text
 export async function sendWhatsApp(phones, title, body, template) {
   if (!whatsappConfigured()) throw new HttpError(503, 'WhatsApp sending is not set up yet.');
   const clean = (s, n) => String(s).replace(/\s+/g, ' ').trim().slice(0, n);
-  let sent = 0, failed = 0;
+  let sent = 0, failed = 0, error = '';
   await runPool(phones, async (p) => {
     try {
       const r = await fetch(`https://graph.facebook.com/v20.0/${process.env.WHATSAPP_PHONE_ID}/messages`, {
@@ -80,19 +81,20 @@ export async function sendWhatsApp(phones, title, body, template) {
         }),
       });
       if (r.ok) sent++;
-      else { failed++; console.error('whatsapp failed:', r.status, await r.text()); }
+      else { failed++; const t = await r.text(); error ||= `WhatsApp API ${r.status}: ${t.slice(0, 160)}`; console.error('whatsapp failed:', r.status, t); }
     } catch (e) {
       failed++;
+      error ||= String(e.message).slice(0, 160);
       console.error('whatsapp error:', e.message);
     }
   });
-  return { sent, failed };
+  return { sent, failed, error };
 }
 
 // SMS through MSG91 "Flow" (India: needs a DLT-approved template with two variables VAR1 and VAR2)
 export async function sendSms(phones, var1, var2) {
   if (!smsConfigured()) throw new HttpError(503, 'SMS sending is not set up yet.');
-  let sent = 0, failed = 0;
+  let sent = 0, failed = 0, error = '';
   const clean = (x, n) => String(x).replace(/\s+/g, ' ').trim().slice(0, n);
   for (let i = 0; i < phones.length; i += 100) {
     const batch = phones.slice(i, i + 100);
@@ -105,8 +107,8 @@ export async function sendSms(phones, var1, var2) {
           recipients: batch.map((p) => ({ mobiles: '91' + p.value, VAR1: clean(var1, 60), VAR2: clean(var2, 60) })),
         }),
       });
-      if (r.ok) sent += batch.length; else { failed += batch.length; console.error('sms failed:', r.status, await r.text()); }
-    } catch (e) { failed += batch.length; console.error('sms error:', e.message); }
+      if (r.ok) sent += batch.length; else { failed += batch.length; const t = await r.text(); error ||= `SMS API ${r.status}: ${t.slice(0, 160)}`; console.error('sms failed:', r.status, t); }
+    } catch (e) { failed += batch.length; error ||= String(e.message).slice(0, 160); console.error('sms error:', e.message); }
   }
-  return { sent, failed };
+  return { sent, failed, error };
 }

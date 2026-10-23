@@ -21,6 +21,9 @@ export default function LiveDarshan() {
   const [channels, setChannels] = useState({ email: true, whatsapp: false, sms: false });
   const [custom, setCustom] = useState('');
   const [result, setResult] = useState(null);
+  const [phones, setPhones] = useState(null);
+  const [testMsg, setTestMsg] = useState('');
+  const [help, setHelp] = useState(false);
 
   const load = () => api.getLive().then(setLive).catch(() => setLive({ isLive: false }));
   useEffect(() => { load(); const t = setInterval(load, 30000); return () => clearInterval(t); }, []);
@@ -53,6 +56,22 @@ export default function LiveDarshan() {
     try { setResult(await api.notifyLive({ ...channels, message: custom, offset })); }
     catch (e) { setAdminMsg(e.message); } finally { setBusy(false); }
   };
+
+  const testEmail = async () => {
+    setBusy(true); setTestMsg('');
+    try { const r = await api.testLiveEmail(); setTestMsg(`Test email sent to ${r.to}. Check that inbox (and spam).`); }
+    catch (e) { setTestMsg(e.message); } finally { setBusy(false); }
+  };
+  const loadPhones = async () => {
+    try {
+      const [dev, subs] = await Promise.all([api.getDevotees(), api.getSubscribers()]);
+      const m = new Map();
+      dev.forEach((d) => { if (d.phone && d.notify !== false) m.set(d.phone, d.name); });
+      subs.forEach((x) => { if (x.type === 'phone' && x.active && !m.has(x.value)) m.set(x.value, 'Subscriber'); });
+      setPhones([...m.entries()].map(([phone, name]) => ({ phone, name })));
+    } catch (e) { setAdminMsg(e.message); setPhones([]); }
+  };
+  const alertText = () => (custom || `${form.title || live?.title || 'Live Arati'} ${live?.isLive ? 'is LIVE now.' : 'is starting soon.'}`) + ' Watch: ' + window.location.origin + '/live';
 
   const src = live?.videoId
     ? `https://www.youtube.com/embed/${live.videoId}?autoplay=1&rel=0&modestbranding=1`
@@ -147,13 +166,44 @@ export default function LiveDarshan() {
               {result && (
                 <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl space-y-1">
                   <p>{[result.email && `Email: ${fmt(result.email)}`, result.whatsapp && `WhatsApp: ${fmt(result.whatsapp)}`, result.sms && `SMS: ${fmt(result.sms)}`].filter(Boolean).join(' | ') || 'Nothing sent.'}</p>
+                  {['email', 'whatsapp', 'sms'].map((k) => result[k]?.error ? <p key={k} className="text-rose-700 break-words">{k}: {result[k].error}</p> : null)}
                   <p className="text-[11px]">Reached up to {result.offset + result.cap} of {result.totals.email} emails / {result.totals.phone} mobile numbers.</p>
                   {(result.offset + result.cap < Math.max(result.totals.email, result.totals.phone)) && (
                     <button disabled={busy} onClick={() => sendAlerts(result.offset + result.cap)} className="px-3 py-1.5 rounded-lg bg-emerald-700 text-white font-bold">Send to next {result.cap}</button>
                   )}
                 </div>
               )}
-              <p className="flex items-center gap-1 text-temple-500"><MessageCircle size={12} /> WhatsApp and SMS need a provider set up; email works once the Gmail app password is added.</p>
+              <div className="flex flex-wrap gap-2 items-center">
+                <button disabled={busy || !cfg?.email} onClick={testEmail} className="px-3 py-1.5 rounded-lg border border-maroon/40 bg-white text-maroon font-bold disabled:opacity-50">Send test email to me</button>
+                <button onClick={() => setHelp(!help)} className="px-3 py-1.5 rounded-lg border border-temple-300 bg-white font-bold">{help ? 'Hide' : 'Show'} setup help</button>
+              </div>
+              {testMsg && <p className="font-bold text-maroon break-words">{testMsg}</p>}
+              {help && (
+                <div className="p-3 bg-gold/10 border border-gold/30 rounded-xl space-y-2 leading-relaxed">
+                  <p><b>Email (easiest, free):</b> official Gmail, then Google Account, Security, turn on 2-Step Verification, then "App passwords" (myaccount.google.com/apppasswords). Create one named "Temple website" and copy the 16 letters. In Vercel, Settings, Environment Variables, add <code>GMAIL_APP_PASSWORD</code> with that value (no spaces), then Redeploy. Press "Send test email to me" to check.</p>
+                  <p><b>WhatsApp (official API):</b> needs a Meta Business account, a phone number that is not already on WhatsApp, and an approved message template with 2 variables. Then add <code>WHATSAPP_TOKEN</code>, <code>WHATSAPP_PHONE_ID</code>, <code>WHATSAPP_TEMPLATE</code> in Vercel. Until then use the manual list below.</p>
+                  <p><b>SMS (India):</b> needs a provider such as MSG91 plus DLT registration and an approved template with two variables. Then add <code>MSG91_AUTHKEY</code> and <code>MSG91_TEMPLATE_ID</code> in Vercel.</p>
+                </div>
+              )}
+
+              <div className="border-t border-saffron/10 pt-3 space-y-2">
+                <p className="uppercase text-temple-700 flex items-center gap-1"><MessageCircle size={12} /> WhatsApp without any setup (manual)</p>
+                {phones === null ? (
+                  <button onClick={loadPhones} className="px-3 py-1.5 rounded-lg bg-emerald-700 text-white font-bold">Show WhatsApp list</button>
+                ) : phones.length === 0 ? <p className="text-temple-500">No mobile numbers yet.</p> : (
+                  <>
+                    <p className="text-temple-600">Tap a number: WhatsApp opens with the message ready, you only press send.</p>
+                    <div className="max-h-56 overflow-y-auto space-y-1">
+                      {phones.map((p) => (
+                        <a key={p.phone} target="_blank" rel="noopener noreferrer" href={`https://wa.me/91${p.phone}?text=${encodeURIComponent(alertText())}`}
+                          className="flex items-center justify-between px-3 py-2 bg-emerald-50 rounded-lg text-emerald-900 hover:bg-emerald-100">
+                          <span>{p.name} &middot; +91 {p.phone}</span><span className="font-bold">Open chat &rarr;</span>
+                        </a>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
             {adminMsg && <p className="text-xs font-bold text-maroon">{adminMsg}</p>}
           </div>

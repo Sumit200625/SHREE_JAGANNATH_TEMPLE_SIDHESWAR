@@ -105,6 +105,7 @@ export const api = {
   notifyConfig: () => call('/notify-config'),
   getLive: () => call('/live'),
   setLive: (body) => call('/live', { method: 'POST', body }),
+  testLiveEmail: () => call('/live/test', { method: 'POST' }),
   notifyLive: (body) => call('/live/notify', { method: 'POST', body }),
   subscribe: (contact) => call('/subscribe', { method: 'POST', body: { contact } }),
   getSubscribers: () => call('/subscribers'),

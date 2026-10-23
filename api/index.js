@@ -274,7 +274,7 @@ async function route(req, res, method, path, url) {
   if (key === 'GET /devotees') {
     await requireRole(req, ['super_admin']);
     const sql = db();
-    const users = await sql`SELECT id, name, email, phone, gotra, address, created_at, (google_sub IS NOT NULL) AS google FROM users ORDER BY created_at DESC LIMIT 5000`;
+    const users = await sql`SELECT id, name, email, phone, gotra, address, created_at, notify_live AS notify, (google_sub IS NOT NULL) AS google FROM users ORDER BY created_at DESC LIMIT 5000`;
     const don = await sql`SELECT data->>'userId' AS uid, count(*)::int AS cnt, COALESCE(sum((data->>'amount')::numeric), 0)::float AS total
                           FROM docs WHERE kind = 'donation' AND data->>'userId' IS NOT NULL GROUP BY 1`;
     const sev = await sql`SELECT data->>'userId' AS uid, count(*)::int AS cnt FROM docs WHERE kind = 'seva' AND data->>'userId' IS NOT NULL GROUP BY 1`;
@@ -342,6 +342,15 @@ async function route(req, res, method, path, url) {
     if (live.id) await patchDoc('live', 'current', { notifiedAt: new Date().toISOString() });
     await audit(me, 'LIVE_NOTIFY', `Sent live alerts ${JSON.stringify({ email: result.email, whatsapp: result.whatsapp, sms: result.sms, offset })}`);
     return send(res, 200, result);
+  }
+  if (key === 'POST /live/test') {
+    const me = await requireRole(req, ['super_admin']);
+    rateLimit(req, 'livetest', 6, 60_000);
+    if (!emailConfigured()) throw new HttpError(503, 'Email is not set up yet: add GMAIL_APP_PASSWORD in Vercel and redeploy.');
+    const baseUrl = process.env.SITE_URL || `https://${req.headers.host}`;
+    const r = await sendEmails([{ value: me.email, unsubUrl: `${baseUrl}/live` }], [{ title: 'Test alert', body: 'This is a test of the live arati alert. If you can read this, email alerts are working.' }], baseUrl, { subject: 'Test: live arati alert' });
+    if (r.failed) throw new HttpError(502, 'Gmail rejected the message: ' + (r.error || 'unknown error'));
+    return send(res, 200, { ok: true, to: me.email });
   }
   if (key === 'GET /unsubscribe-live') {
     const u = str(url.searchParams.get('u'), 80), t = str(url.searchParams.get('t'), 64);

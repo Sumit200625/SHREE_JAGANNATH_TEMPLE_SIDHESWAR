@@ -31,6 +31,8 @@ async function init() {
     address text,
     created_at timestamptz NOT NULL DEFAULT now()
   )`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS notify_live boolean NOT NULL DEFAULT true`;
+  // Generic document table: notices, festivals, faqs, gallery, sevas, donations, tickets, audit logs
   await sql`CREATE TABLE IF NOT EXISTS docs (
     seq bigserial,
     kind text NOT NULL,
@@ -54,6 +56,7 @@ async function init() {
 
   const [{ c }] = await sql`SELECT count(*)::int AS c FROM docs WHERE kind IN ('notice','festival','gallery','faq')`;
   if (c === 0) {
+    // "newest first" kinds are read ORDER BY seq DESC, so insert them reversed to keep the original order on screen
     const rows = [
       ...[...SEED_NOTICES].reverse().map((d) => ({ kind: 'notice', id: d.id, data: d })),
       ...[...SEED_FESTIVALS].reverse().map((d) => ({ kind: 'festival', id: d.id, data: d })),
@@ -68,9 +71,9 @@ async function init() {
     `;
   }
 
-  // One-time content update for already-seeded sites: real photos, Lord Jagannath only, new contact number.
-  // Overwrites built-in festival/gallery entries (same ids) and removes old demo gallery pictures.
-  // Devotee uploads and admin-created notices are NOT touched.
+  // One-time content update for sites that were seeded earlier: real temple photos, Lord Jagannath only,
+  // new contact number. Overwrites the built-in festival/gallery entries (same ids) and removes the old
+  // demo gallery pictures. Devotee uploads and admin-created notices are NOT touched.
   const migrated = await sql`SELECT 1 FROM docs WHERE kind = 'meta' AND id = 'content_v2'`;
   if (!migrated.length) {
     const fresh = [

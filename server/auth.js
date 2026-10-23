@@ -37,7 +37,7 @@ function staffRole(email, googleVerified) {
 export function publicUser(u) {
   return {
     id: u.id, name: u.name, email: u.email, phone: u.phone || '', picture: u.picture || '',
-    gotra: u.gotra || '', address: u.address || '',
+    gotra: u.gotra || '', address: u.address || '', notifyLive: u.notify_live !== false,
     role: staffRole(u.email, !!u.google_sub),
   };
 }
@@ -80,5 +80,9 @@ export async function verifyGoogleCredential(credential) {
     throw new HttpError(401, 'Google sign-in could not be verified. Please try again.');
   }
 }
+
+// signed token for the one-click "stop live alerts" link in emails (no login needed)
+export const liveUnsubToken = (userId) =>
+  crypto.createHmac('sha256', process.env.JWT_SECRET || '').update('live:' + userId).digest('base64url').slice(0, 32);
 
 export const newId = (prefix) => `${prefix}_${crypto.randomBytes(9).toString('base64url')}`;

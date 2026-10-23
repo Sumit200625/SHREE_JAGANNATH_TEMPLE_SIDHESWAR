@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import LiveBanner from './LiveBanner';
 import { Menu, X, Globe, User, ShieldAlert, LogOut, LogIn } from 'lucide-react';
 
 const languages = [
@@ -15,6 +16,7 @@ const navItems = [
   { path: '/', labelKey: 'home' },
   { path: '/about', labelKey: 'about' },
   { path: '/darshan', labelKey: 'darshan' },
+  { path: '/live', labelKey: 'live' },
   { path: '/festivals', labelKey: 'festivals' },
   { path: '/panchang', labelKey: 'panchang' },
   { path: '/seva', labelKey: 'seva' },
@@ -151,6 +153,8 @@ export default function Header() {
         <ShieldAlert size={13} className="text-gold shrink-0" />
         <span className="leading-tight">{t('fraudWarning')}</span>
       </div>
+
+      <LiveBanner />
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2">
         <Link to="/" className="flex items-center gap-2 sm:gap-3 group min-w-0">

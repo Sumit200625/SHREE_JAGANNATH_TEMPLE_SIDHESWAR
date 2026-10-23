@@ -4,10 +4,10 @@ import { put } from '@vercel/blob';
 import { db, ensureReady, listDocs, getDoc, insertDoc, patchDoc, deleteDoc } from '../server/db.js';
 import {
   startSession, endSession, currentUser, requireUser, requireRole, publicUser,
-  verifyGoogleCredential, newId, OFFICIAL_ADMIN,
+  verifyGoogleCredential, newId, OFFICIAL_ADMIN, liveUnsubToken,
 } from '../server/auth.js';
 import { HttpError, send, sendHtml, readJson, readRaw, str, isEmail, isPhone, rateLimit } from '../server/http.js';
-import { emailConfigured, whatsappConfigured, sendEmails, sendWhatsApp } from '../server/notify.js';
+import { emailConfigured, whatsappConfigured, smsConfigured, sendEmails, sendWhatsApp, sendSms } from '../server/notify.js';
 import {
   paymentsEnabled, createOrder, verifyCheckoutSignature, verifyWebhookSignature,
   fulfill, getOrder, publicDonation, refund,
@@ -34,6 +34,27 @@ function cleanPdfUrl(v) {
     if (u.protocol === 'https:' && u.hostname.endsWith('.public.blob.vercel-storage.com')) return s;
   } catch { /* fall through */ }
   throw new HttpError(400, 'Invalid PDF link. Please upload the PDF using the attach button.');
+}
+
+// accepts a YouTube link, a video id or a channel id; only the id is stored (we build the embed URL ourselves)
+function parseYoutube(input) {
+  const s = str(input, 300);
+  if (/^UC[\w-]{22}$/.test(s)) return { channelId: s };
+  if (/^[\w-]{11}$/.test(s)) return { videoId: s };
+  try {
+    const u = new URL(s);
+    const h = u.hostname.replace(/^(www|m)\./, '');
+    if (h === 'youtu.be') { const id = u.pathname.slice(1, 12); if (/^[\w-]{11}$/.test(id)) return { videoId: id }; }
+    if (h === 'youtube.com' || h === 'youtube-nocookie.com') {
+      const v = u.searchParams.get('v');
+      if (v && /^[\w-]{11}$/.test(v)) return { videoId: v };
+      const m = u.pathname.match(/^\/(?:live|embed|shorts)\/([\w-]{11})/);
+      if (m) return { videoId: m[1] };
+      const c = u.pathname.match(/^\/channel\/(UC[\w-]{22})/);
+      if (c) return { channelId: c[1] };
+    }
+  } catch { /* fall through */ }
+  throw new HttpError(400, 'Please paste a valid YouTube live link (or video ID / channel ID).');
 }
 
 async function upsertGoogleUser(p) {
@@ -81,8 +102,8 @@ async function route(req, res, method, path, url) {
     if (pw.length < 8 || pw.length > 72) throw new HttpError(400, pw.length < 8 ? 'Password must be at least 8 characters.' : 'Password is too long (maximum 72 characters).');
     const hash = await bcrypt.hash(pw, 11);
     try {
-      const rows = await db()`INSERT INTO users (id, name, email, phone, password_hash)
-        VALUES (${newId('usr')}, ${name}, ${email}, ${phone}, ${hash}) RETURNING *`;
+      const rows = await db()`INSERT INTO users (id, name, email, phone, password_hash, notify_live)
+        VALUES (${newId('usr')}, ${name}, ${email}, ${phone}, ${hash}, ${d.notifyLive !== false}) RETURNING *`;
       await startSession(res, rows[0].id);
       return send(res, 200, { user: publicUser(rows[0]) });
     } catch (e) {
@@ -107,9 +128,14 @@ async function route(req, res, method, path, url) {
   if (key === 'PATCH /profile') {
     const me = await requireUser(req);
     const d = await readJson(req);
-    const rows = await db()`UPDATE users SET name = COALESCE(NULLIF(${str(d.name, 80)}, ''), name),
-      gotra = ${str(d.gotra, 60)}, address = ${str(d.address, 300)},
-      phone = COALESCE(NULLIF(${str(d.phone, 10)}, ''), phone) WHERE id = ${me.id} RETURNING *`;
+    const has = (k) => Object.prototype.hasOwnProperty.call(d, k);
+    const rows = await db()`UPDATE users SET
+      name = COALESCE(NULLIF(${has('name') ? str(d.name, 80) : ''}, ''), name),
+      gotra = COALESCE(${has('gotra') ? str(d.gotra, 60) : null}, gotra),
+      address = COALESCE(${has('address') ? str(d.address, 300) : null}, address),
+      phone = COALESCE(NULLIF(${has('phone') ? str(d.phone, 10) : ''}, ''), phone),
+      notify_live = COALESCE(${has('notifyLive') ? !!d.notifyLive : null}, notify_live)
+      WHERE id = ${me.id} RETURNING *`;
     return send(res, 200, { user: publicUser(rows[0]) });
   }
 
@@ -239,7 +265,7 @@ async function route(req, res, method, path, url) {
     await requireRole(req, NOTICE);
     const subs = (await listDocs('subscriber', 20000)).filter((s) => s.active);
     return send(res, 200, {
-      email: emailConfigured(), whatsapp: whatsappConfigured(),
+      email: emailConfigured(), whatsapp: whatsappConfigured(), sms: smsConfigured(),
       subscribers: { email: subs.filter((s) => s.type === 'email').length, phone: subs.filter((s) => s.type === 'phone').length },
     });
   }
@@ -257,6 +283,75 @@ async function route(req, res, method, path, url) {
     return send(res, 200, users.map((u) => ({
       ...u, donationCount: dm[u.id]?.cnt || 0, donationTotal: dm[u.id]?.total || 0, sevaCount: sm[u.id]?.cnt || 0,
     })));
+  }
+
+  // ---------------- live darshan (arati / pujan) ----------------
+  if (key === 'GET /live') {
+    const l = (await getDoc('live', 'current')) || {};
+    return send(res, 200, {
+      isLive: !!l.isLive, kind: l.kind || 'arati', title: l.title || '', videoId: l.videoId || '', channelId: l.channelId || '',
+      startedAt: l.startedAt || '', updatedAt: l.updatedAt || '',
+    });
+  }
+  if (key === 'POST /live') {
+    const me = await requireRole(req, ['super_admin']);
+    const d = await readJson(req);
+    const old = (await getDoc('live', 'current')) || {};
+    const src = d.url ? parseYoutube(d.url) : { videoId: old.videoId || '', channelId: old.channelId || '' };
+    const isLive = !!d.isLive;
+    if (isLive && !src.videoId && !src.channelId) throw new HttpError(400, 'Paste the YouTube live link first.');
+    const now = new Date().toISOString();
+    const next = {
+      isLive, kind: d.kind === 'pujan' ? 'pujan' : 'arati', title: str(d.title, 120) || (d.kind === 'pujan' ? 'Live Pujan' : 'Live Arati'),
+      videoId: src.videoId || '', channelId: src.channelId || '', updatedAt: now,
+      startedAt: isLive ? (old.isLive ? old.startedAt || now : now) : '', notifiedAt: old.notifiedAt || '',
+    };
+    if (old.id) await patchDoc('live', 'current', next); else await insertDoc('live', 'current', next);
+    await audit(me, isLive ? 'LIVE_ON' : 'LIVE_OFF', `${next.kind}: ${next.title}`);
+    return send(res, 200, { ok: true, isLive: next.isLive });
+  }
+  if (key === 'POST /live/notify') {
+    const me = await requireRole(req, ['super_admin']);
+    const d = await readJson(req);
+    const live = (await getDoc('live', 'current')) || {};
+    if (live.notifiedAt && Date.now() - Date.parse(live.notifiedAt) < 5 * 60000 && !d.offset)
+      throw new HttpError(429, 'Alerts were sent a few minutes ago. Please wait 5 minutes before sending again.');
+    const baseUrl = process.env.SITE_URL || `https://${req.headers.host}`;
+    const link = `${baseUrl}/live`;
+    const title = live.title || 'Live Arati';
+    const custom = str(d.message, 200);
+    const text = (custom || (live.isLive ? `${title} is LIVE now.` : `${title} is starting soon.`)) + ' Watch: ' + link;
+    const offset = Math.max(0, parseInt(d.offset, 10) || 0), CAP = 300;
+
+    const users = await db()`SELECT id, email, phone FROM users WHERE notify_live = true ORDER BY created_at LIMIT 20000`;
+    const subs = (await listDocs('subscriber', 20000)).filter((s) => s.active);
+    const emails = new Map(), phones = new Map();
+    for (const u of users) {
+      if (u.email) emails.set(u.email.toLowerCase(), { value: u.email, unsubUrl: `${baseUrl}/api/index?__p=unsubscribe-live&u=${u.id}&t=${liveUnsubToken(u.id)}` });
+      if (u.phone) phones.set(u.phone, { value: u.phone });
+    }
+    for (const s of subs) {
+      if (s.type === 'email' && !emails.has(s.value)) emails.set(s.value, { value: s.value, token: s.token });
+      if (s.type === 'phone' && !phones.has(s.value)) phones.set(s.value, { value: s.value });
+    }
+    const E = [...emails.values()], P = [...phones.values()];
+    const result = { totals: { email: E.length, phone: P.length }, offset, cap: CAP };
+    if (d.email) result.email = await sendEmails(E.slice(offset, offset + CAP), [{ title, body: text }], baseUrl, { subject: (live.isLive ? '🔴 LIVE now: ' : 'Live soon: ') + title });
+    if (d.whatsapp) result.whatsapp = await sendWhatsApp(P.slice(offset, offset + CAP), title, text, process.env.WHATSAPP_LIVE_TEMPLATE);
+    if (d.sms) result.sms = await sendSms(P.slice(offset, offset + CAP), title, link.replace(/^https?:\/\//, ''));
+    if (live.id) await patchDoc('live', 'current', { notifiedAt: new Date().toISOString() });
+    await audit(me, 'LIVE_NOTIFY', `Sent live alerts ${JSON.stringify({ email: result.email, whatsapp: result.whatsapp, sms: result.sms, offset })}`);
+    return send(res, 200, result);
+  }
+  if (key === 'GET /unsubscribe-live') {
+    const u = str(url.searchParams.get('u'), 80), t = str(url.searchParams.get('t'), 64);
+    let ok = false;
+    if (u && t && t === liveUnsubToken(u)) { await db()`UPDATE users SET notify_live = false WHERE id = ${u}`; ok = true; }
+    return sendHtml(res, 200, `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Live alerts</title>
+      <body style="font-family:Arial,sans-serif;background:#fffdf0;color:#3b2417;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0">
+      <div style="max-width:420px;text-align:center;padding:24px"><h2 style="color:#7a0f0f">Shree Jagannath Temple Sidheswar</h2>
+      <p>${ok ? 'You will no longer receive live arati alerts. You can turn them on again any time from the Live page after logging in.' : 'This link is not valid.'}</p>
+      <p><a href="/live" style="color:#e35f24;font-weight:bold">Go to Live page</a></p></div></body>`);
   }
 
   // ---------------- festivals ----------------

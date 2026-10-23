@@ -13,6 +13,7 @@ export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [notifyLive, setNotifyLive] = useState(true);
   const [password, setPassword] = useState('');
 
   const [showPassword, setShowPassword] = useState(false);
@@ -39,7 +40,7 @@ export default function Register() {
     setErrorMsg('');
 
     try {
-      const res = await register(name.trim(), email.trim(), phone, password);
+      const res = await register(name.trim(), email.trim(), phone, password, notifyLive);
       setLoading(false);
       if (res.success) {
         navigate('/profile');
@@ -148,6 +149,11 @@ export default function Register() {
               </button>
             </div>
           </div>
+
+          <label className="flex items-start gap-2 text-[11px] font-semibold text-temple-700 leading-snug">
+            <input type="checkbox" checked={notifyLive} onChange={(e) => setNotifyLive(e.target.checked)} className="mt-0.5" />
+            <span>Send me alerts when Live Arati / Pujan starts (WhatsApp, SMS and email). You can turn this off any time.</span>
+          </label>
 
           <button 
             type="submit"

@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }) => {
 
   const loginWithGoogle = (credential) => wrap(() => api.googleLogin(credential));
   const login = (email, password) => wrap(() => api.login({ email, password }));
-  const register = (name, email, phone, password) => wrap(() => api.register({ name, email, phone, password }));
+  const register = (name, email, phone, password, notifyLive = true) => wrap(() => api.register({ name, email, phone, password, notifyLive }));
   const updateProfile = (data) => wrap(() => api.updateProfile(data));
 
   const logout = async () => {

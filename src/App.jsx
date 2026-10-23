@@ -19,6 +19,7 @@ import PrasadBhoga from './pages/PrasadBhoga';
 import Gallery from './pages/Gallery';
 import NewsNotices from './pages/NewsNotices';
 import Panchang from './pages/Panchang';
+import LiveDarshan from './pages/LiveDarshan';
 import PlanYourVisit from './pages/PlanYourVisit';
 import ContactGrievance from './pages/ContactGrievance';
 import Login from './pages/Login';
@@ -48,6 +49,7 @@ export default function App() {
                 <Route path="/gallery" element={<Gallery />} />
                 <Route path="/notices" element={<NewsNotices />} />
                 <Route path="/panchang" element={<Panchang />} />
+                <Route path="/live" element={<LiveDarshan />} />
                 <Route path="/visit" element={<PlanYourVisit />} />
                 <Route path="/contact" element={<ContactGrievance />} />
                 <Route path="/login" element={<Login />} />

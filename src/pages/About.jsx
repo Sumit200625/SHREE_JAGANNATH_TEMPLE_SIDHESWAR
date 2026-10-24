@@ -6,10 +6,8 @@ export default function About() {
   const { t, language } = useLanguage();
 
   const timelineEvents = [
-    { year: "1994", titleEn: "Site Consecration", titleOr: "ଭୂମି ପୂଜନ", titleHi: "भूमि पूजन", descEn: "The holy land in Siddheswar village was donated by local families and consecrated by Vedic saints.", descOr: "ସିଦ୍ଧେଶ୍ୱର ଗ୍ରାମର ପବିତ୍ର ଭୂମି ମନ୍ଦିର ନିର୍ମାଣ ପାଇଁ ଦାନ କରାଗଲା ଏବଂ ବୈଦିକ ମନ୍ତ୍ରଚାରଣ ସହ ଶିଳାନ୍ୟାସ ହେଲା।", descHi: "सिद्धेश्वर गांव में पवित्र भूमि दान की गई और वैदिक संतों द्वारा भूमि पूजन किया गया।" },
-    { year: "1999", titleEn: "Deity Consecration (Prana Pratishtha)", titleOr: "ଶ୍ରୀବିଗ୍ରହ ପ୍ରତିଷ୍ଠା", titleHi: "प्राण प्रतिष्ठा", descEn: "The sacred idol of Lord Jagannath (Patitapavan) was carved out of sacred Neem wood (Daru) and consecrated.", descOr: "ପତିତପାବନ ଶ୍ରୀ ଜଗନ୍ନାଥ ଦାରୁରେ ନିର୍ମିତ ହୋଇ ରତ୍ନସିଂହାସନରେ ଅଧିଷ୍ଠିତ ହେଲେ ଏବଂ ପ୍ରାଣ ପ୍ରତିଷ୍ଠା ଉତ୍ସବ ସମ୍ପନ୍ନ ହେଲା।", descHi: "भगवान जगन्नाथ (पतितपावन) के पवित्र विग्रह को नीम की लकड़ी (दारू) से तराश कर प्रतिष्ठित किया गया।" },
-    { year: "2010", titleEn: "Gopuram Construction", titleOr: "ମନ୍ଦିର ଚୂଡ଼ା ଓ ନାଟମନ୍ଦିର ନିର୍ମାଣ", titleHi: "गोपुरम निर्माण", descEn: "The classic stone Vimana spire and the Natamandira (audience hall) were completed in classic Kalinga style.", descOr: "ମନ୍ଦିରର ପଥର ବିମାନ ଚୂଡ଼ା ଏବଂ ନାଟମନ୍ଦିର କଳିଙ୍ଗ ସ୍ଥାପତ୍ୟ କାରୁକାର୍ଯ୍ୟ ସହ ସମ୍ପୂର୍ଣ୍ଣ ହେଲା।", descHi: "क्लासिक पत्थर विमान शिखर और नाटमंदिर का निर्माण कलिंग शैली में पूरा किया गया।" },
-    { year: "2020", titleEn: "New Anandabazar Complex", titleOr: "ଆନନ୍ଦବଜାର ଓ ଯାତ୍ରୀ ନିବାସ", titleHi: "नया आनंदबाजार परिसर", descEn: "The new Anandabazar complex was constructed to sit up to 500 devotees for Mahaprasad distribution simultaneously.", descOr: "ଏକ ସଙ୍ଗେ ୫୦୦ ଭକ୍ତ ମହାପ୍ରସାଦ ସେବନ କରିବା ପାଇଁ ବୃହତ ଆନନ୍ଦବଜାର କମ୍ପ୍ଲେକ୍ସ ଓ ରୋଷଘର ପ୍ରତିଷ୍ଠା ହେଲା।", descHi: "महाप्रसाद वितरण के लिए एक साथ 500 भक्तों के बैठने की व्यवस्था के साथ आनंदबाजार परिसर बनाया गया।" }
+    { year: "1800 years ago", titleEn: "Temple Built", titleOr: "ମନ୍ଦିର ନିର୍ମାଣ", titleHi: "मंदिर का निर्माण", descEn: "The temple was built by the Raja of Badakhemundi.", descOr: "ବଡ଼ଖେମୁଣ୍ଡିର ରାଜାଙ୍କ ଦ୍ୱାରା ମନ୍ଦିର ନିର୍ମିତ ହୋଇଥିଲା।", descHi: "मंदिर का निर्माण बड़ाखेमुंडी के राजा ने कराया था।" },
+    { year: "1994", titleEn: "Temple Renovated", titleOr: "ମନ୍ଦିର ସଂସ୍କାର", titleHi: "मंदिर का जीर्णोद्धार", descEn: "The temple was renovated.", descOr: "ମନ୍ଦିରର ସଂସ୍କାର କରାଯାଇଥିଲା।", descHi: "मंदिर का जीर्णोद्धार कराया गया था।" },
   ];
 
   return (
@@ -59,10 +57,10 @@ export default function About() {
             <div className="text-sm text-temple-700 space-y-4 leading-relaxed font-semibold">
               <p>
                 {language === 'or' 
-                  ? "ସିଦ୍ଧେଶ୍ୱର ଶ୍ରୀ ଜଗନ୍ନାଥ ମନ୍ଦିର ହେଉଛି ଓଡ଼ିଶାର ଗଞ୍ଜାମ ଜିଲ୍ଲାରେ ଅବସ୍ଥିତ ଏକ ପ୍ରମୁଖ ଆଧ୍ୟାତ୍ମିକ କେନ୍ଦ୍ର। ପ୍ରାୟ ତିନି ଦଶନ୍ଧି ପୂର୍ବେ ସ୍ଥାନୀୟ ଶ୍ରଦ୍ଧାଳୁ ଓ ସାଧୁମାନଙ୍କ ସ୍ୱପ୍ନ ସ୍ୱରୂପ ଏହି ଭୂମି କାର୍ଯ୍ୟ ଆରମ୍ଭ ହୋଇଥିଲା। ଶ୍ରୀଜଗନ୍ନାଥ ସଂସ୍କୃତିର ବ୍ୟାପକ ପ୍ରଚାର ପ୍ରସାର କରିବା ଏହି ମନ୍ଦିରର ମୁଖ୍ୟ ଲକ୍ଷ୍ୟ ଅଟେ।"
+                  ? "ସିଦ୍ଧେଶ୍ୱର ଶ୍ରୀ ଜଗନ୍ନାଥ ମନ୍ଦିର ଓଡ଼ିଶାର ଗଞ୍ଜାମ ଜିଲ୍ଲାର ଏକ ପ୍ରମୁଖ ଭକ୍ତିକେନ୍ଦ୍ର। ଏହି ମନ୍ଦିର ପ୍ରାୟ 1800 ବର୍ଷ ପୂର୍ବେ ବଡ଼ଖେମୁଣ୍ଡିର ରାଜାଙ୍କ ଦ୍ୱାରା ନିର୍ମିତ ହୋଇଥିଲା। ଏଠାରେ ଭକ୍ତମାନେ ପତିତପାବନ ଶ୍ରୀ ଜଗନ୍ନାଥଙ୍କ ସହ ସିଧାସଳଖ ଯୋଗାଯୋଗ ସ୍ଥାପନ କରିପାରିବେ।"
                   : language === 'hi'
-                  ? "सिद्धेश्वर श्री जगन्नाथ मंदिर ओडिशा के गंजम जिले में स्थित एक प्रमुख आध्यात्मिक केंद्र है। लगभग तीन दशक पहले स्थानीय भक्तों और संतों के प्रयास से इस भूमि पर मंदिर निर्माण कार्य शुरू हुआ था। इसका मुख्य लक्ष्य जगन्नाथ संस्कृति का व्यापक प्रचार-प्रसार करना है।"
-                  : "The Sidheswar Shree Jagannath Temple stands as a central beacon of devotion in the Ganjam district of Odisha. Established through the vision of local sages and saints over three decades ago, it provides a quiet sanctuary where devotees can connect directly with the universal energy of Lord Jagannath (Patitapavan)."
+                  ? "सिद्धेश्वर श्री जगन्नाथ मंदिर ओडिशा के गंजाम जिले में भक्ति का एक प्रमुख केंद्र है। इस मंदिर का निर्माण लगभग 1800 वर्ष पहले बड़ाखेमुंडी के राजा ने कराया था। यहाँ भक्त पतितपावन भगवान जगन्नाथ से सीधे जुड़ सकते हैं।"
+                  : "The Sidheswar Shree Jagannath Temple stands as a central beacon of devotion in the Ganjam district of Odisha. Built about 1800 years ago by the Raja of Badakhemundi, it provides a quiet sanctuary where devotees can connect directly with Lord Jagannath (Patitapavan)."
                 }
               </p>
               <p>
@@ -157,7 +155,7 @@ export default function About() {
             </h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative max-w-3xl mx-auto">
             <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-gold/30 -z-10"></div>
             {timelineEvents.map((event, idx) => (
               <div key={idx} className="glass-card p-6 border-t-4 border-saffron flex flex-col justify-between items-center text-center shadow-sm hover:shadow-md transition-shadow">
@@ -227,7 +225,6 @@ export default function About() {
                 <li>Rama Chandra Padhy</li>
                 <li>Krushna Chandra Padhy</li>
                 <li>Binod Chandra Padhy</li>
-                <li>Pramod Chandra Padhy</li>
                 <li>Kanhu Charan Khadanga</li>
                 <li>Pramod Padhy</li>
               </ul>

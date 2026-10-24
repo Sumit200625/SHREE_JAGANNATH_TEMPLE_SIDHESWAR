@@ -14,9 +14,9 @@ export default function DarshanRituals() {
       const minutes = now.getMinutes();
       const currentTimeDecimal = hours + minutes / 60;
 
-      // Temple Open: 4:30 AM - 3:00 PM and 4:00 PM - 10:30 PM
-      const openMorning = currentTimeDecimal >= 4.5 && currentTimeDecimal <= 15;
-      const openEvening = currentTimeDecimal >= 16 && currentTimeDecimal <= 22.5;
+      // Temple Open: 5:00 AM - 11:00 AM and 4:00 PM - 11:00 PM (Pahuda 11:00 AM - 4:00 PM)
+      const openMorning = currentTimeDecimal >= 5 && currentTimeDecimal < 11;
+      const openEvening = currentTimeDecimal >= 16 && currentTimeDecimal < 23;
       
       setIsOpen(openMorning || openEvening);
     };
@@ -27,23 +27,19 @@ export default function DarshanRituals() {
   }, []);
 
   const dailyRituals = [
-    { time: "04:30 AM - 05:00 AM", eventEn: "Dwara Phita", eventOr: "ଦ୍ୱାର ଫିଟା", eventHi: "द्वार खोलना", descEn: "Dwara Phita — temple doors open", descOr: "ମନ୍ଦିର ଦ୍ୱାର ଖୋଲିବା ଏବଂ ମଙ୍ଗଳ ବାଦ୍ୟ", descHi: "मंदिर के कपाट खोलना" },
-    { time: "05:00 AM - 05:30 AM", eventEn: "Mangala Alati", eventOr: "ମଙ୍ଗଳ ଆଳତି", eventHi: "मंगला आरती", descEn: "Mangala Alati — first aarti", descOr: "ଦିନର ପ୍ରଥମ ପ୍ରାର୍ଥନା ଓ ଆଳତି", descHi: "दिन की पहली आरती और प्रार्थना" },
-    { time: "05:30 AM - 06:00 AM", eventEn: "Mailam", eventOr: "ମଇଲମ", eventHi: "मैलम", descEn: "Mailam — change of night clothes", descOr: "ମହାପ୍ରଭୁଙ୍କ ରାତ୍ରି ବସ୍ତ୍ର ପରିବର୍ତ୍ତନ", descHi: "रात्रि वस्त्र परिवर्तन" },
-    { time: "06:00 AM - 06:30 AM", eventEn: "Abakasha", eventOr: "ଅବକାଶ ନୀତି", eventHi: "अबकाश", descEn: "Abakasha — morning cleansing/bathing rituals", descOr: "ମହାପ୍ରଭୁଙ୍କ ସ୍ନାନ ଓ ମୁଖଶୋଧନ", descHi: "सुबह का स्नान और मुखमार्जन" },
-    { time: "06:30 AM - 07:00 AM", eventEn: "Mailam and Besa", eventOr: "ମଇଲମ ଓ ବେଶ", eventHi: "मैलम और वेश", descEn: "Mailam and Besa — new dress and decoration", descOr: "ନୂତନ ବସ୍ତ୍ର ଓ ପୁଷ୍ପ ଶୃଙ୍ଗାର", descHi: "नवीन वस्त्र और पुष्प श्रृंगार" },
+    { time: "05:00 AM - 05:30 AM", eventEn: "Dwara Fita", eventOr: "ଦ୍ୱାର ଫିଟା", eventHi: "द्वार खोलना", descEn: "Dwara Fita — temple doors open", descOr: "ମନ୍ଦିର ଦ୍ୱାର ଖୋଲିବା ଏବଂ ମଙ୍ଗଳ ବାଦ୍ୟ", descHi: "मंदिर के कपाट खोलना" },
+    { time: "05:30 AM - 06:00 AM", eventEn: "Abakash", eventOr: "ଅବକାଶ ନୀତି", eventHi: "अबकाश", descEn: "Abakash — morning cleansing/bathing rituals", descOr: "ମହାପ୍ରଭୁଙ୍କ ସ୍ନାନ ଓ ମୁଖଶୋଧନ", descHi: "सुबह का स्नान और मुखमार्जन" },
+    { time: "06:00 AM - 07:00 AM", eventEn: "Mailam and Besa", eventOr: "ମଇଲମ ଓ ବେଶ", eventHi: "मैलम और वेश", descEn: "Mailam and Besa — new dress and decoration", descOr: "ନୂତନ ବସ୍ତ୍ର ଓ ପୁଷ୍ପ ଶୃଙ୍ଗାର", descHi: "नवीन वस्त्र और पुष्प श्रृंगार" },
     { time: "07:00 AM - 08:00 AM", eventEn: "Sahanamela", eventOr: "ସାହାଣମେଲା", eventHi: "सहानमेला", descEn: "Sahanamela — closer public darshan, when permitted", descOr: "ଭକ୍ତମାନଙ୍କ ପାଇଁ ନିକଟ ଦର୍ଶନ ସମୟ", descHi: "भक्तों के लिए समीप दर्शन" },
-    { time: "08:00 AM - 09:00 AM", eventEn: "Surya & Dwarapala Puja", eventOr: "ରୋଷ ହୋମ, ସୂର୍ଯ୍ୟ ପୂଜା ଓ ଦ୍ୱାରପାଳ ପୂଜା", eventHi: "रोष होम, सूर्य पूजा, द्वारपाल पूजा", descEn: "Rosa Homa, Surya Puja, Dwarapala Puja", descOr: "ମନ୍ଦିର ରୋଷଘର ହୋମ, ଭାନୁ ପୂଜା ଓ ଦ୍ୱାର ରକ୍ଷକ ପୂଜା", descHi: "रसोईघर हवन, सूर्य पूजा और द्वारपाल पूजा" },
-    { time: "09:00 AM - 10:00 AM", eventEn: "Gopala Ballava Bhoga", eventOr: "ଗୋପାଳ ବଲ୍ଲଭ ଭୋଗ", eventHi: "गोपाल बल्लभ भोग", descEn: "Gopala Ballava Bhoga — morning offering", descOr: "ବାଳ ଧୂପ ଭୋଗ, ସତେଜ ଛେନା, ମାଖନ ଓ ଫଳ ଅର୍ପଣ", descHi: "सुबह का भोग, मक्खन और फल" },
-    { time: "10:00 AM - 12:00 PM", eventEn: "Sakala Dhupa", eventOr: "ସକାଳ ଧୂପ", eventHi: "सकाल धूप", descEn: "Sakala Dhupa — main morning food offering and puja", descOr: "ଖେଚୁଡ଼ି ଓ ଅନ୍ନପ୍ରସାଦ ସହ ସକାଳ ଧୂପ ପୂଜା", descHi: "सुबह का मुख्य भोजन भोग और पूजा" },
-    { time: "12:00 PM - 01:30 PM", eventEn: "Bhoga Mandap", eventOr: "ଭୋଗ ମଣ୍ଡପ ଭୋଗ", eventHi: "भोग मण्डप भोग", descEn: "Bhoga Mandap — large offering of Mahaprasad", descOr: "ବୃହତ ମହାପ୍ରସାଦ ଅନ୍ନ ଧୂପ ଅର୍ପଣ", descHi: "महाप्रसाद का मुख्य दोपहर भोग" },
-    { time: "01:30 PM - 03:30 PM", eventEn: "Madhyahna Dhupa", eventOr: "ମଧ୍ୟାହ୍ନ ଧୂପ", eventHi: "मध्याह्न धूप", descEn: "Madhyahna Dhupa — afternoon bhoga/puja", descOr: "ମଧ୍ୟାହ୍ନ ଅନ୍ନ ଧୂପ ସେବା", descHi: "दोपहर का मुख्य भोजन भोग" },
-    { time: "Around 03:00 PM - 04:00 PM", eventEn: "Pahuda", eventOr: "ଦିବା ପହୁଡ଼", eventHi: "शयन", descEn: "Pahuda — short afternoon rest; darshan may pause", descOr: "ଠାକୁରଙ୍କ ଦିବା ବିଶ୍ରାମ", descHi: "देवताओं का विश्राम काल" },
-    { time: "04:00 PM - 06:00 PM", eventEn: "Reopening / Afternoon Darshan", eventOr: "ଦ୍ୱାର ଫିଟା ଓ ଅପରାହ୍ନ ଦର୍ଶନ", eventHi: "द्वार खोलना और दोपहर के दर्शन", descEn: "Reopening / afternoon darshan", descOr: "ମନ୍ଦିର ଦ୍ୱାର ପୁନର୍ବାର ଖୋଲିବା ଓ ଦର୍ଶନ", descHi: "दोपहर के दर्शन के लिए मंदिर का पुनः खुलना" },
-    { time: "06:00 PM - 07:30 PM", eventEn: "Sandhya Alati & Sandhya Dhupa", eventOr: "ସନ୍ଧ୍ୟା ଆଳତି ଓ ସନ୍ଧ୍ୟା ଧୂପ", eventHi: "संध्या आरती और धूप", descEn: "Sandhya Alati and Sandhya Dhupa — evening aarti and offering", descOr: "ସନ୍ଧ୍ୟା ଆଳତି ଓ ଧୂପ ଦର୍ଶନ", descHi: "शाम की भव्य आरती और भोग" },
-    { time: "08:00 PM - 09:30 PM", eventEn: "Sankirtan", eventOr: "ସଂକୀର୍ତ୍ତନ", eventHi: "संकीर्तन", descEn: "Sankirtan (ramtarak mahamantra jap)", descOr: "ରାମତାରକ ମହାମନ୍ତ୍ର ଜପ ଓ ନାମ ସଂକୀର୍ତ୍ତନ", descHi: "रामतारक महामंत्र जाप और संकीर्तन" },
-    { time: "09:00 PM - 10:30 PM", eventEn: "Ratri Bhogo", eventOr: "ରାତ୍ରି ଭୋଗ", eventHi: "रात्रि भोग", descEn: "Ratri bhogo", descOr: "ରାତ୍ରି ଶେଷ ଧୂପ ସେବା", descHi: "रात्रि का अंतिम भोग" },
-    { time: "10:30 PM - 11:00 PM or later", eventEn: "Khata Seja Lagi & Pahuda", eventOr: "ଖଟ ଶେଯ ଲାଗି ଓ ପହୁଡ଼", eventHi: "खट सेज लागी और शयन", descEn: "Khata Seja Lagi and Pahuda — bedding ritual and the Lords retire; temple closes afterward", descOr: "ରାତ୍ରି ପହୁଡ଼ ସେବା ଏବଂ ମନ୍ଦିର କବାଟ ବନ୍ଦ", descHi: "रात्रि शयन काल और मंदिर कपाट बंद" }
+    { time: "08:00 AM - 09:00 AM", eventEn: "Surya Dwarapaala Puja", eventOr: "ରୋଷ ହୋମ, ସୂର୍ଯ୍ୟ ପୂଜା ଓ ଦ୍ୱାରପାଳ ପୂଜା", eventHi: "रोष होम, सूर्य पूजा, द्वारपाल पूजा", descEn: "Rosa Homa, Surya Puja, Dwarapala Puja", descOr: "ମନ୍ଦିର ରୋଷଘର ହୋମ, ଭାନୁ ପୂଜା ଓ ଦ୍ୱାର ରକ୍ଷକ ପୂଜା", descHi: "रसोईघर हवन, सूर्य पूजा और द्वारपाल पूजा" },
+    { time: "09:00 AM - 09:30 AM", eventEn: "Sakala Dhupa", eventOr: "ସକାଳ ଧୂପ", eventHi: "सकाल धूप", descEn: "Sakala Dhupa — main morning food offering and puja", descOr: "ଖେଚୁଡ଼ି ଓ ଅନ୍ନପ୍ରସାଦ ସହ ସକାଳ ଧୂପ ପୂଜା", descHi: "सुबह का मुख्य भोजन भोग और पूजा" },
+    { time: "09:30 AM - 10:30 AM", eventEn: "Bhoga Mandap Bhoga", eventOr: "ଭୋଗ ମଣ୍ଡପ ଭୋଗ", eventHi: "भोग मण्डप भोग", descEn: "Bhoga Mandap Bhoga — large offering of Mahaprasad", descOr: "ବୃହତ ମହାପ୍ରସାଦ ଅନ୍ନ ଧୂପ ଅର୍ପଣ", descHi: "महाप्रसाद का मुख्य दोपहर भोग" },
+    { time: "11:00 AM - 04:00 PM", eventEn: "Pahuda", eventOr: "ଦିବା ପହୁଡ଼", eventHi: "शयन", descEn: "Pahuda — rest period; darshan is paused", descOr: "ପହୁଡ଼ — ବିଶ୍ରାମ ସମୟ; ଦର୍ଶନ ବନ୍ଦ ରହେ", descHi: "पहुड़ — विश्राम का समय; दर्शन बंद रहते हैं" },
+    { time: "04:00 PM - 06:00 PM", eventEn: "Reopening", eventOr: "ପୁନଃ ଦ୍ୱାର ଫିଟା", eventHi: "पुनः द्वार खुलना", descEn: "Reopening — temple doors open again for darshan", descOr: "ପୁନଃ ଦ୍ୱାର ଫିଟା — ଦର୍ଶନ ପାଇଁ ମନ୍ଦିର ପୁଣି ଖୋଲେ", descHi: "पुनः द्वार खुलना — दर्शन के लिए मंदिर फिर से खुलता है" },
+    { time: "06:00 PM - 07:30 PM", eventEn: "Sandhya Arati & Sandhya Dhupa", eventOr: "ସନ୍ଧ୍ୟା ଆଳତି ଓ ସନ୍ଧ୍ୟା ଧୂପ", eventHi: "संध्या आरती और धूप", descEn: "Sandhya Arati and Sandhya Dhupa — evening arati and offering", descOr: "ସନ୍ଧ୍ୟା ଆଳତି ଓ ଧୂପ ଦର୍ଶନ", descHi: "शाम की भव्य आरती और भोग" },
+    { time: "08:00 PM - 09:00 PM", eventEn: "Sankirtana", eventOr: "ସଂକୀର୍ତ୍ତନ", eventHi: "संकीर्तन", descEn: "Sankirtan (ramtarak mahamantra jap)", descOr: "ରାମତାରକ ମହାମନ୍ତ୍ର ଜପ ଓ ନାମ ସଂକୀର୍ତ୍ତନ", descHi: "रामतारक महामंत्र जाप और संकीर्तन" },
+    { time: "09:00 PM - 10:00 PM", eventEn: "Ratri Bhoga", eventOr: "ରାତ୍ରି ଭୋଗ", eventHi: "रात्रि भोग", descEn: "Ratri Bhoga — night offering", descOr: "ରାତ୍ରି ଶେଷ ଧୂପ ସେବା", descHi: "रात्रि का अंतिम भोग" },
+    { time: "10:00 PM - 11:00 PM", eventEn: "Khata Seja Lagi", eventOr: "ଖଟ ସେଜ ଲାଗି", eventHi: "खट सेज लागि", descEn: "Khata Seja Lagi — bedding ritual; Lord Jagannath retires for the night and the temple closes", descOr: "ଖଟ ସେଜ ଲାଗି — ଶୟନ ନୀତି; ପ୍ରଭୁ ଶ୍ରୀ ଜଗନ୍ନାଥ ବିଶ୍ରାମ କରନ୍ତି ଓ ମନ୍ଦିର ବନ୍ଦ ହୁଏ", descHi: "खट सेज लागि — शयन अनुष्ठान; भगवान जगन्नाथ विश्राम करते हैं और मंदिर बंद होता है" }
   ];
 
   return (

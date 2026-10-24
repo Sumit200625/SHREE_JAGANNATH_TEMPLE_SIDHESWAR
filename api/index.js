@@ -7,6 +7,7 @@ import {
   verifyGoogleCredential, newId, OFFICIAL_ADMIN, liveUnsubToken,
 } from '../server/auth.js';
 import { HttpError, send, sendHtml, readJson, readRaw, str, isEmail, isPhone, rateLimit } from '../server/http.js';
+import { resolveChannel, detectLive, channelIdFromHandle } from '../server/youtube.js';
 import { emailConfigured, whatsappConfigured, smsConfigured, sendEmails, sendWhatsApp, sendSms } from '../server/notify.js';
 import {
   paymentsEnabled, createOrder, verifyCheckoutSignature, verifyWebhookSignature,
@@ -40,6 +41,7 @@ function cleanPdfUrl(v) {
 function parseYoutube(input) {
   const s = str(input, 300);
   if (/^UC[\w-]{22}$/.test(s)) return { channelId: s };
+  if (/^@[\w.-]{3,60}$/.test(s)) return { handle: s.slice(1) };
   if (/^[\w-]{11}$/.test(s)) return { videoId: s };
   try {
     const u = new URL(s);
@@ -52,6 +54,8 @@ function parseYoutube(input) {
       if (m) return { videoId: m[1] };
       const c = u.pathname.match(/^\/channel\/(UC[\w-]{22})/);
       if (c) return { channelId: c[1] };
+      const hd = u.pathname.match(/^\/@([\w.-]{3,60})/);
+      if (hd) return { handle: hd[1] };
     }
   } catch { /* fall through */ }
   throw new HttpError(400, 'Please paste a valid YouTube live link (or video ID / channel ID).');
@@ -287,23 +291,41 @@ async function route(req, res, method, path, url) {
 
   // ---------------- live darshan (arati / pujan) ----------------
   if (key === 'GET /live') {
-    const l = (await getDoc('live', 'current')) || {};
-    return send(res, 200, {
-      isLive: !!l.isLive, kind: l.kind || 'arati', title: l.title || '', videoId: l.videoId || '', channelId: l.channelId || '',
-      startedAt: l.startedAt || '', updatedAt: l.updatedAt || '',
-    });
+    let l = (await getDoc('live', 'current')) || {};
+    const ch = await resolveChannel(l);
+    if (ch.fromHandle && ch.id) {            // remember the channel id so YouTube is not asked again
+      try { if (l.id) await patchDoc('live', 'current', { resolvedChannelId: ch.id }); else l = await insertDoc('live', 'current', { isLive: false, kind: 'arati', title: '', resolvedChannelId: ch.id }); } catch { /* ignore */ }
+    }
+    const channelId = l.channelId || ch.id || '';
+    let out = { isLive: !!l.isLive, kind: l.kind || 'arati', title: l.title || '', videoId: l.videoId || '', channelId, startedAt: l.startedAt || '', updatedAt: l.updatedAt || '', auto: false };
+    if (!out.isLive && channelId) {          // not switched on by the admin: ask YouTube whether the channel is live right now
+      const d = await detectLive(channelId);
+      if (d) out = { ...out, isLive: true, auto: true, videoId: d.videoId, title: d.title || 'Live Darshan', kind: /pujan|puja|pooja/i.test(d.title) ? 'pujan' : 'arati' };
+    }
+    out.playlistId = channelId ? 'UU' + channelId.slice(2) : '';
+    return send(res, 200, out);
   }
   if (key === 'POST /live') {
     const me = await requireRole(req, ['super_admin']);
     const d = await readJson(req);
     const old = (await getDoc('live', 'current')) || {};
-    const src = d.url ? parseYoutube(d.url) : { videoId: old.videoId || '', channelId: old.channelId || '' };
+    let src = d.url ? parseYoutube(d.url) : { videoId: '', channelId: old.channelId || '' };
+    const NEED_ID = 'Could not read the channel from that link automatically. Paste the Channel ID (starts with UC...) from YouTube Studio > Settings > Channel > Advanced settings.';
+    if (src.handle) {
+      const id = await channelIdFromHandle(src.handle);
+      if (!id) throw new HttpError(400, NEED_ID);
+      src = { channelId: id };
+    }
     const isLive = !!d.isLive;
-    if (isLive && !src.videoId && !src.channelId) throw new HttpError(400, 'Paste the YouTube live link first.');
+    if (isLive && !src.videoId && !src.channelId) {      // no link pasted: use the temple's channel (its running live stream)
+      const ch = await resolveChannel(old);
+      if (!ch.id) throw new HttpError(400, NEED_ID);
+      src = { channelId: ch.id };
+    }
     const now = new Date().toISOString();
     const next = {
       isLive, kind: d.kind === 'pujan' ? 'pujan' : 'arati', title: str(d.title, 120) || (d.kind === 'pujan' ? 'Live Pujan' : 'Live Arati'),
-      videoId: src.videoId || '', channelId: src.channelId || '', updatedAt: now,
+      videoId: src.videoId || '', channelId: src.channelId || old.channelId || '', updatedAt: now,
       startedAt: isLive ? (old.isLive ? old.startedAt || now : now) : '', notifiedAt: old.notifiedAt || '',
     };
     if (old.id) await patchDoc('live', 'current', next); else await insertDoc('live', 'current', next);

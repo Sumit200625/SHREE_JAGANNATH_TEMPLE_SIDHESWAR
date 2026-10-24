@@ -320,7 +320,6 @@ export default function ContactGrievance() {
               <li>Rama Chandra Padhy</li>
               <li>Krushna Chandra Padhy</li>
               <li>Binod Chandra Padhy</li>
-              <li>Pramod Chandra Padhy</li>
               <li>Kanhu Charan Khadanga</li>
               <li>Pramod Padhy</li>
             </ul>

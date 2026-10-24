@@ -683,7 +683,7 @@ END:VCALENDAR`;
                     <span>Darshan Timings ({selectedFestival.startTime || 'Morning'} - {selectedFestival.endTime || 'Night'})</span>
                   </h4>
                   <p className="text-xs text-temple-600 dark:text-cream-light/70 leading-relaxed font-semibold">
-                    The temple gates open early at {selectedFestival.startTime || '05:00 AM'}. Rituals will continue until closure at {selectedFestival.endTime || '09:30 PM'}. Timings are subject to change.
+                    The temple gates open early at {selectedFestival.startTime || '05:00 AM'}. Rituals will continue until closure at {selectedFestival.endTime || '11:00 PM'}. Timings are subject to change.
                   </p>
                 </div>
 

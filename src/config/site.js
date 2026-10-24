@@ -6,6 +6,6 @@ export const SITE = {
   email: 'shreejagannathtemplesiddheswar@gmail.com',
   emailLink: 'mailto:shreejagannathtemplesiddheswar@gmail.com',
   instagram: 'https://www.instagram.com/shree.jagannath.temple.sid?stkn=ODUyeXBlaTZ5eXpk',
-  youtube: 'https://youtube.com/@shreejagannathtemplesidheswar?si=ywbZD_23CZnTRtNb',
+  youtube: 'https://www.youtube.com/@SHREEJAGANNATHTEMPLESIDDHESWAR',
   facebook: 'https://www.facebook.com/share/1KmGfHqbJz/',
 };

@@ -26,9 +26,9 @@ export default function Home() {
   });
   const [notices, setNotices] = useState([]);
 
-  // Temple open/closed status (simple daytime check for demo purposes)
+  // Temple open/closed status: open 5:00-11:00 AM and 4:00-11:00 PM (Pahuda in between)
   const currentHour = new Date().getHours();
-  const isTempleOpen = currentHour >= 5 && currentHour < 21;
+  const isTempleOpen = (currentHour >= 5 && currentHour < 11) || (currentHour >= 16 && currentHour < 23);
 
   // Countdown timer for next festival (Rath Yatra 2027)
   useEffect(() => {
@@ -75,10 +75,10 @@ export default function Home() {
   }, []);
 
   const timings = [
-    { key: 'morningAarti', time: '5:00 AM' },
-    { key: 'noonBhoga', time: '12:30 PM' },
-    { key: 'eveningAarti', time: '7:00 PM' },
-    { key: 'closingTime', time: '9:00 PM' },
+    { key: 'doorsOpen', time: '5:00 AM' },
+    { key: 'pahudaRest', time: '11:00 AM - 4:00 PM' },
+    { key: 'eveningAarti', time: '6:00 PM' },
+    { key: 'closingTime', time: '11:00 PM' },
   ];
 
   const galleryPreview = [

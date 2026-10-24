@@ -89,6 +89,22 @@ async function init() {
     await sql`DELETE FROM docs WHERE kind = 'gallery' AND data->>'imageUrl' LIKE '/assets/%.png'`;
     await sql`INSERT INTO docs (kind, id, data) VALUES ('meta', 'content_v2', '{}'::jsonb) ON CONFLICT DO NOTHING`;
   }
+
+  // Second one-time refresh: new timings FAQ (Mangala Arati removed) and festival ritual schedules
+  const migrated3 = await sql`SELECT 1 FROM docs WHERE kind = 'meta' AND id = 'content_v3'`;
+  if (!migrated3.length) {
+    const fresh3 = [
+      ...SEED_FESTIVALS.map((d) => ({ kind: 'festival', id: d.id, data: d })),
+      ...SEED_FAQS.filter((d) => d.id === 'faq_1').map((d) => ({ kind: 'faq', id: d.id, data: d })),
+    ];
+    await sql`
+      INSERT INTO docs (kind, id, data)
+      SELECT kind, id, data
+      FROM jsonb_to_recordset(${JSON.stringify(fresh3)}::jsonb) AS t(kind text, id text, data jsonb)
+      ON CONFLICT (kind, id) DO UPDATE SET data = EXCLUDED.data
+    `;
+    await sql`INSERT INTO docs (kind, id, data) VALUES ('meta', 'content_v3', '{}'::jsonb) ON CONFLICT DO NOTHING`;
+  }
 }
 
 // ---- document helpers ----

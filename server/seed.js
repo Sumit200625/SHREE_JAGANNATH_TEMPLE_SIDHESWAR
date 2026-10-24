@@ -58,7 +58,7 @@ const SEED_FESTIVALS = [
     status: "Tentative — subject to temple committee confirmation",
     shortDescription: "The grand chariot procession of Lord Jagannath to Gundicha Temple.",
     fullDescription: "Rath Yatra is the most auspicious annual festival. Lord Jagannath rides the sacred chariot to the Gundicha temple, pulled by thousands of devotees in a mass assembly of faith.",
-    ritualSchedule: "06:30 AM Mangala Alati, 08:30 AM Pahandi Bije, 11:30 AM Chera Pahanra, 03:00 PM Chariot Pulling",
+    ritualSchedule: "08:30 AM Pahandi Bije, 11:30 AM Chera Pahanra, 03:00 PM Chariot Pulling",
     visitorGuidelines: "Expect extremely large crowds. Follow instructions from police and volunteers. Wheelchair assistance is available at VIP block bypass.",
     parkingInformation: "Two-wheeler parking at High School Ground. Heavy vehicles and cars must park at the Block Office Bypass bypass road.",
     contactInformation: "+91 93378 22942 / Temple Office Control",
@@ -100,7 +100,7 @@ const SEED_FESTIVALS = [
     status: "Tentative — subject to temple committee confirmation",
     shortDescription: " Transit of Sun into Capricorn celebrated with Makar Chaula bhoga offerings.",
     fullDescription: "Marks the change of solar cycles. Special Makar Chaula (harvest sweet uncooked rice, ghee, banana, and coconut) is offered to Lord Jagannath. Lord Jagannath is dressed in Makar Vesha.",
-    ritualSchedule: "06:00 AM Mangala Aarti, 10:00 AM Makar Chaula offering, 06:30 PM Sandhya Aarti",
+    ritualSchedule: "10:00 AM Makar Chaula offering, 06:30 PM Sandhya Aarti",
     visitorGuidelines: "Arrive early to buy Makar Chaula packages. Long queues expected.",
     parkingInformation: "Normal temple parking available.",
     contactInformation: "+91 93378 22942",
@@ -705,12 +705,12 @@ const SEED_GALLERY = [
 const SEED_FAQS = [
   {
     id: "faq_1",
-    questionEn: "What are the timings of Mangala Aarti?",
-    questionOr: "ମଙ୍ଗଳ ଆଳତି ର ସମୟ କେତେବେଳେ?",
-    questionHi: "मंगला आरती का समय कब है?",
-    answerEn: "Mangala Aarti takes place daily at 05:30 AM right after the temple gates open at 05:00 AM.",
-    answerOr: "ମନ୍ଦିର ଦ୍ଵାର ସକାଳ ୫:୦୦ ରେ ଖୋଲିବା ପରେ ମଙ୍ଗଳ ଆଳତି ଦୈନିକ ସକାଳ ୫:୩୦ ରେ ହୋଇଥାଏ।",
-    answerHi: "मंदिर के द्वार सुबह 05:00 बजे खुलने के तुरंत बाद मंगला आरती दैनिक रूप से सुबह 05:30 बजे होती है।"
+    questionEn: "What are the temple timings?",
+    questionOr: "ମନ୍ଦିର ସମୟ କେତେ?",
+    questionHi: "मंदिर के समय क्या हैं?",
+    answerEn: "The temple opens daily at 05:00 AM (Dwara Fita). Pahuda is from 11:00 AM to 04:00 PM, the temple reopens at 04:00 PM, and the night rituals (Ratri Bhoga and Khata Seja Lagi) finish around 11:00 PM. See the Darshan page for the full schedule.",
+    answerOr: "ମନ୍ଦିର ପ୍ରତିଦିନ ପ୍ରାତଃ 5:00 ରେ ଖୋଲେ (ଦ୍ୱାର ଫିଟା)। ପହୁଡ଼ ସକାଳ 11:00 ରୁ ଅପରାହ୍ନ 4:00 ପର୍ଯ୍ୟନ୍ତ, ଅପରାହ୍ନ 4:00 ରେ ମନ୍ଦିର ପୁଣି ଖୋଲେ, ଏବଂ ରାତ୍ରି ନୀତି (ରାତ୍ରି ଭୋଗ ଓ ଖଟ ସେଜ ଲାଗି) ପ୍ରାୟ ରାତି 11:00 ରେ ଶେଷ ହୁଏ। ସମ୍ପୂର୍ଣ୍ଣ ସମୟସୂଚୀ ଦର୍ଶନ ପୃଷ୍ଠାରେ ଦେଖନ୍ତୁ।",
+    answerHi: "मंदिर प्रतिदिन सुबह 5:00 बजे खुलता है (द्वार फिटा)। पहुड़ सुबह 11:00 से शाम 4:00 बजे तक होता है, शाम 4:00 बजे मंदिर फिर खुलता है, और रात की नीतियाँ (रात्रि भोग व खट सेज लागि) लगभग रात 11:00 बजे पूरी होती हैं। पूरी समय-सारणी दर्शन पेज पर देखें।"
   },
   {
     id: "faq_2",

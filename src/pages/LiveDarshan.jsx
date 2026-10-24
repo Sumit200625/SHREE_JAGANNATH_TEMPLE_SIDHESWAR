@@ -95,7 +95,7 @@ export default function LiveDarshan() {
           {live?.isLive && src ? (
             <>
               <div className="px-5 py-3 flex items-center gap-2 bg-red-50 text-red-800 font-extrabold text-sm">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span> LIVE NOW &middot; {live.title}
+                <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span> LIVE NOW &middot; {live.title}{live.auto ? ' (from our YouTube channel)' : ''}
               </div>
               <div className="aspect-video bg-black">
                 <iframe
@@ -117,6 +117,25 @@ export default function LiveDarshan() {
             <Link to="/darshan" className="px-4 py-2 rounded-xl border border-saffron/30 bg-white text-xs font-bold flex items-center gap-1.5"><Clock size={14} /> Arati timings</Link>
             <Link to="/seva" className="px-4 py-2 rounded-xl bg-saffron text-white text-xs font-bold flex items-center gap-1.5"><Gift size={14} /> Book Arati Seva</Link>
           </div>
+        </div>
+
+        {/* Videos from the temple's YouTube channel */}
+        <div className="glass-card overflow-hidden">
+          <div className="px-5 py-3 flex flex-wrap items-center justify-between gap-2 border-b border-saffron/10">
+            <p className="text-sm font-extrabold text-maroon flex items-center gap-2"><Youtube size={16} className="text-red-600" /> Videos of Shree Jagannath Temple</p>
+            <a href={`${SITE.youtube}?sub_confirmation=1`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-bold">Subscribe on YouTube</a>
+          </div>
+          {live?.playlistId ? (
+            <div className="aspect-video bg-black">
+              <iframe title="Temple videos" src={`https://www.youtube.com/embed/videoseries?list=${live.playlistId}`} className="w-full h-full" loading="lazy"
+                allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
+            </div>
+          ) : (
+            <div className="p-8 text-center space-y-3">
+              <p className="text-sm font-semibold text-temple-600">Watch all our videos on the temple's YouTube channel.</p>
+              <a href={SITE.youtube} target="_blank" rel="noopener noreferrer" className="inline-block px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-bold">Open YouTube channel</a>
+            </div>
+          )}
         </div>
 
         {/* Alerts */}
@@ -147,8 +166,8 @@ export default function LiveDarshan() {
               <label className="space-y-1"><span className="uppercase text-temple-700">Title (shown to devotees)</span>
                 <input className={inputCls} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Sandhya Arati" maxLength={120} /></label>
             </div>
-            <label className="block space-y-1 text-xs font-semibold"><span className="uppercase text-temple-700">YouTube live link (or channel ID)</span>
-              <input className={inputCls} value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="https://www.youtube.com/watch?v=..." /></label>
+            <label className="block space-y-1 text-xs font-semibold"><span className="uppercase text-temple-700">YouTube live link (optional - leave empty to use the temple channel)</span>
+              <input className={inputCls} value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="https://www.youtube.com/watch?v=...  or  channel link / channel ID" /></label>
             <div className="flex flex-wrap gap-2">
               <button disabled={busy} onClick={() => saveLive(true)} className="px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-bold disabled:opacity-60">Go LIVE</button>
               <button disabled={busy || !live?.isLive} onClick={() => saveLive(false)} className="px-4 py-2 rounded-xl border border-temple-300 bg-white text-xs font-bold disabled:opacity-50">Stop live</button>

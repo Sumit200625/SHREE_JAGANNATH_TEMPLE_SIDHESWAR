@@ -10,6 +10,14 @@ export const whatsappConfigured = () =>
 const mailUser = () => process.env.GMAIL_USER || OFFICIAL_ADMIN;
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+export async function sendMail(to, subject, text, html) {
+  if (!emailConfigured() || !to) return false;
+  try {
+    await mailer().sendMail({ from: `"Shree Jagannath Temple Sidheswar" <${mailUser()}>`, to, subject, text, html });
+    return true;
+  } catch (e) { console.error('mail failed:', e.message); return false; }
+}
+
 let transport;
 function mailer() {
   transport ??= nodemailer.createTransport({

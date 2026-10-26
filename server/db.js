@@ -1,6 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 import { HttpError } from './http.js';
 import { SEED_NOTICES, SEED_FESTIVALS, SEED_GALLERY, SEED_FAQS } from './seed.js';
+import { SEVAS, DRAFT_SEVAS, DEFAULT_SLOTS } from '../shared/catalog.js';
 
 let _sql;
 export function db() {
@@ -67,6 +68,20 @@ async function init() {
       INSERT INTO docs (kind, id, data)
       SELECT kind, id, data
       FROM jsonb_to_recordset(${JSON.stringify(rows)}::jsonb) AS t(kind text, id text, data jsonb)
+      ON CONFLICT DO NOTHING
+    `;
+  }
+
+  // The seva list lives in the database so the committee can change names, prices, slots and switch sevas on/off
+  const [{ n: sevaCount }] = await sql`SELECT count(*)::int AS n FROM docs WHERE kind = 'sevaitem'`;
+  if (sevaCount === 0) {
+    const items = [
+      ...SEVAS.map((x) => ({ ...x, active: true })),
+      ...DRAFT_SEVAS.map((x) => ({ ...x, active: false })),   // hidden until the committee sets a real price
+    ].map((x, i) => ({ kind: 'sevaitem', id: `sv_${i + 1}`, data: { id: `sv_${i + 1}`, name: x.name, desc: x.desc, price: x.price, slots: DEFAULT_SLOTS, active: x.active, sort: i + 1 } }));
+    await sql`
+      INSERT INTO docs (kind, id, data)
+      SELECT kind, id, data FROM jsonb_to_recordset(${JSON.stringify(items)}::jsonb) AS t(kind text, id text, data jsonb)
       ON CONFLICT DO NOTHING
     `;
   }

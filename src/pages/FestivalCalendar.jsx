@@ -48,6 +48,8 @@ export default function FestivalCalendar() {
         const lib = await import('../utils/festivalDates');
         const y = new Date().getFullYear();
         res = lib.buildFestivalList(raw, [y, y + 1]);
+        const evs = await api.getEvents().catch(() => []);
+        res = [...res, ...evs.map((e) => lib.eventToFestival(e, raw[0]))];
       } catch (e) { console.error('Festival calculation failed', e); }
       // Sort festivals chronologically
       const sorted = res.sort((a, b) => new Date(a.date) - new Date(b.date));

@@ -121,7 +121,8 @@ const SANKRANTI = new Set(['fest_3', 'fest_7', 'fest_24']);
 const tf = new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', hour: 'numeric', minute: '2-digit', hour12: true });
 
 // festivals: the list from the database (descriptions, rituals, images...). Dates are replaced by the computed ones.
-export function buildFestivalList(festivals, years) {
+export function buildFestivalList(festivals, years, opts = {}) {
+  const withObservances = opts.observances !== false;
   const out = [];
   const template = festivals.find((f) => f.id === 'fest_27');
   for (const year of years) {
@@ -135,7 +136,7 @@ export function buildFestivalList(festivals, years) {
       if (SANKRANTI.has(f.id) && v.moment) status = `Tentative - Sankranti moment ${tf.format(v.moment).toUpperCase()}, subject to temple committee confirmation`;
       out.push({ ...f, id: `${f.id}_${year}`, baseId: f.id, date: key, status, lastUpdated: key, dateEnd: f.id === 'fest_19' ? dates.dashami : undefined });
     }
-    if (template) {
+    if (template && withObservances) {
       for (const o of computeObservances(year)) {
         const idx = o.kind === 'ekadashi' ? 10 : o.kind === 'purnima' ? 14 : 15;
         const pk = o.kind === 'ekadashi' ? (o.shukla ? 'Shukla ' : 'Krishna ') : '';
@@ -150,4 +151,16 @@ export function buildFestivalList(festivals, years) {
     }
   }
   return out.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+}
+
+// A local temple event added by the committee in the Admin panel, shaped like a festival so the calendar can show it
+export function eventToFestival(e, shape = {}) {
+  const base = {};
+  for (const [k, v] of Object.entries(shape)) base[k] = typeof v === 'string' ? '' : Array.isArray(v) ? [] : v;
+  return {
+    ...base, id: `evt_${e.id}`, baseId: 'fest_17', festivalNameEnglish: e.titleEn, festivalNameOdia: e.titleOr || e.titleEn, festivalNameHindi: e.titleHi || e.titleEn,
+    date: e.date, dateEnd: e.endDate || undefined, startTime: e.time || '', endTime: '', category: 'Local Temple Festival', status: 'Announced by the temple committee',
+    shortDescription: e.descEn || '', fullDescription: [e.descEn, e.place && `Place: ${e.place}`].filter(Boolean).join('\n\n'), ritualSchedule: '', visitorGuidelines: '',
+    parkingInformation: '', contactInformation: '+91 93378 22942', imageUrl: '', isFeatured: false, isPublished: true, lastUpdated: e.date,
+  };
 }

@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 // Layout components
 import Header from './components/Header';
 import Footer from './components/Footer';
+import MobileCtaBar from './components/MobileCtaBar';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Pages
@@ -20,6 +21,7 @@ import Gallery from './pages/Gallery';
 import NewsNotices from './pages/NewsNotices';
 import Panchang from './pages/Panchang';
 import LiveDarshan from './pages/LiveDarshan';
+import { PrivacyPolicy, TermsConditions, RefundPolicy } from './pages/Policies';
 import PlanYourVisit from './pages/PlanYourVisit';
 import ContactGrievance from './pages/ContactGrievance';
 import Login from './pages/Login';
@@ -50,6 +52,9 @@ export default function App() {
                 <Route path="/notices" element={<NewsNotices />} />
                 <Route path="/panchang" element={<Panchang />} />
                 <Route path="/live" element={<LiveDarshan />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsConditions />} />
+                <Route path="/refund-policy" element={<RefundPolicy />} />
                 <Route path="/visit" element={<PlanYourVisit />} />
                 <Route path="/contact" element={<ContactGrievance />} />
                 <Route path="/login" element={<Login />} />
@@ -82,6 +87,8 @@ export default function App() {
 
             {/* Global Footer */}
             <Footer />
+            <MobileCtaBar />
+            <div className="h-16 lg:hidden" aria-hidden="true"></div>
           </div>
         </Router>
       </AuthProvider>

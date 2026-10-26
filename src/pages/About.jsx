@@ -1,5 +1,7 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { SITE } from '../config/site';
 import { BookOpen, Map, Landmark, Users, ShieldAlert, Award, Compass, Eye, ShieldCheck } from 'lucide-react';
 
 export default function About() {
@@ -143,6 +145,31 @@ export default function About() {
               <h3 className="text-xl font-bold font-outfit">Anandabazar Dining Area</h3>
               <p className="text-xs text-cream-light/80 mt-1">Sustained by continuous devotee contributions.</p>
             </div>
+          </div>
+        </section>
+
+        {/* Temple at a glance */}
+        <section className="glass-card p-6 md:p-8 border-t-4 border-gold">
+          <h3 className="text-xl md:text-2xl font-extrabold font-outfit text-maroon mb-5">Temple at a Glance</h3>
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-3 text-sm">
+            {[
+              ['Presiding Deity', 'Lord Jagannath (Patitapavan)'],
+              ['Place', 'Sidhaswar, Ganjam district, Odisha 761054'],
+              ['Built', 'About 1800 years ago, by the Raja of Badakhemundi'],
+              ['Renovated', '1994'],
+              ['Daily Darshan', 'Opens 5:00 AM (Dwara Fita); Pahuda 11:00 AM - 4:00 PM; evening darshan until about 11:00 PM'],
+              ['Temple Office', `${SITE.phoneDisplay} (call / WhatsApp)`],
+            ].map(([k, v]) => (
+              <div key={k} className="flex flex-col border-b border-saffron/10 pb-2">
+                <dt className="text-[11px] font-bold uppercase text-temple-500">{k}</dt>
+                <dd className="font-semibold text-temple-900">{v}</dd>
+              </div>
+            ))}
+          </dl>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link to="/darshan" className="px-4 py-2 rounded-full bg-saffron text-white text-xs font-bold">Darshan timings</Link>
+            <Link to="/festivals" className="px-4 py-2 rounded-full border border-saffron text-saffron text-xs font-bold">Festival dates</Link>
+            <Link to="/visit" className="px-4 py-2 rounded-full border border-saffron text-saffron text-xs font-bold">Plan your visit</Link>
           </div>
         </section>
 

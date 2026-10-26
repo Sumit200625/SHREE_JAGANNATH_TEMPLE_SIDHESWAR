@@ -8,6 +8,8 @@ import {
 } from '../server/auth.js';
 import { HttpError, send, sendHtml, readJson, readRaw, str, isEmail, isPhone, rateLimit } from '../server/http.js';
 import { resolveChannel, detectLive, channelIdFromHandle } from '../server/youtube.js';
+import { sendMail } from '../server/notify.js';
+import { DEFAULT_TIMINGS, DEFAULT_SLOTS } from '../shared/catalog.js';
 import { emailConfigured, whatsappConfigured, smsConfigured, sendEmails, sendWhatsApp, sendSms } from '../server/notify.js';
 import {
   paymentsEnabled, createOrder, verifyCheckoutSignature, verifyWebhookSignature,
@@ -521,7 +523,7 @@ async function route(req, res, method, path, url) {
       const ref = str(url.searchParams.get('ref'), 40).toUpperCase();
       const rows = await db()`SELECT data FROM docs WHERE kind = 'seva' AND upper(data->>'bookingReference') = ${ref}`;
       const s = rows[0]?.data;
-      return send(res, 200, s ? { bookingReference: s.bookingReference, devoteeName: s.devoteeName, sevaType: s.sevaType, selectedDate: s.selectedDate,
+      return send(res, 200, s ? { bookingReference: s.bookingReference, devoteeName: s.devoteeName, sevaType: s.sevaType, selectedDate: s.selectedDate, slot: s.slot || '',
         amount: s.amount, paymentStatus: s.paymentStatus, approvalStatus: s.approvalStatus, rejectionReason: s.rejectionReason || '', phone: s.phone, gotra: s.gotra } : null);
     }
     await requireRole(req, ['super_admin', 'seva_manager']);
@@ -530,11 +532,117 @@ async function route(req, res, method, path, url) {
   if (a === 'sevas' && b && method === 'PATCH') {
     const me = await requireRole(req, ['super_admin', 'seva_manager']);
     const d = await readJson(req);
-    if (!['approved', 'rejected'].includes(d.approvalStatus)) throw new HttpError(400, 'Invalid status.');
-    const doc = await patchDoc('seva', b, { approvalStatus: d.approvalStatus, rejectionReason: str(d.rejectionReason, 500) });
+    if (!['approved', 'rejected', 'completed', 'cancelled'].includes(d.approvalStatus)) throw new HttpError(400, 'Invalid status.');
+    const doc = await patchDoc('seva', b, { approvalStatus: d.approvalStatus, rejectionReason: str(d.rejectionReason, 500), statusUpdatedAt: new Date().toISOString() });
     if (!doc) throw new HttpError(404, 'Booking not found.');
     await audit(me, 'UPDATE_SEVA', `Updated Seva status (${d.approvalStatus}) for ref: ${doc.bookingReference}`);
+    if (doc.email) {
+      const word = { approved: 'CONFIRMED', completed: 'COMPLETED', cancelled: 'CANCELLED', rejected: 'NOT ACCEPTED' }[d.approvalStatus];
+      const extra = { approved: 'Your seva is confirmed. Please reach the temple on the booked date and slot.', completed: 'Your seva has been performed. Jai Jagannath! Thank you for your devotion.',
+        cancelled: 'Your booking was cancelled by the temple office. If you paid online, the temple office will contact you about the refund.', rejected: 'We are sorry, the temple could not accept this booking.' }[d.approvalStatus];
+      const text = `Dear ${doc.devoteeName},\n\nBooking ${doc.bookingReference} (${doc.sevaType}, ${doc.selectedDate}, ${doc.slot || ''}) is ${word}.\n${extra}${doc.rejectionReason ? '\nNote: ' + doc.rejectionReason : ''}\n\nShree Jagannath Temple Sidheswar\nWhatsApp / Phone: +91 93378 22942`;
+      await sendMail(doc.email, `Seva booking ${doc.bookingReference} ${word.toLowerCase()}`, text, `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;white-space:pre-wrap;line-height:1.6;color:#3b2417">${text.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</div>`);
+    }
     return send(res, 200, doc);
+  }
+
+  // ---------------- seva list (admin manages names, prices, slots) ----------------
+  if (key === 'GET /sevaitems') {
+    let items = await listDocs('sevaitem', 300);
+    items = items.sort((x, y) => (x.sort || 0) - (y.sort || 0));
+    if (url.searchParams.get('all') === '1') { await requireRole(req, ['super_admin', 'seva_manager']); return send(res, 200, items); }
+    return send(res, 200, items.filter((x) => x.active && x.price > 0).map((x) => ({ id: x.id, name: x.name, desc: x.desc, price: x.price, slots: x.slots?.length ? x.slots : DEFAULT_SLOTS })));
+  }
+  const cleanSeva = (d) => {
+    const name = str(d.name, 120);
+    if (!name) throw new HttpError(400, 'Seva name is required.');
+    const price = Math.round(Number(d.price));
+    if (!Number.isFinite(price) || price < 0 || price > 500000) throw new HttpError(400, 'Enter a valid price in rupees.');
+    const active = !!d.active;
+    if (active && price < 1) throw new HttpError(400, 'Set a price above Rs. 0 before switching this seva on.');
+    const slots = (Array.isArray(d.slots) ? d.slots : []).map((x) => str(x, 80)).filter(Boolean).slice(0, 10);
+    return { name, desc: str(d.desc, 500), price, active, slots: slots.length ? slots : DEFAULT_SLOTS };
+  };
+  if (key === 'POST /sevaitems') {
+    const me = await requireRole(req, ['super_admin', 'seva_manager']);
+    const clean = cleanSeva(await readJson(req));
+    const all = await listDocs('sevaitem', 300);
+    const doc = await insertDoc('sevaitem', newId('sv'), { ...clean, sort: all.reduce((m, x) => Math.max(m, x.sort || 0), 0) + 1 });
+    await audit(me, 'ADD_SEVA_ITEM', `Added seva: ${doc.name} Rs.${doc.price}`);
+    return send(res, 201, doc);
+  }
+  if (a === 'sevaitems' && b && method === 'PATCH') {
+    const me = await requireRole(req, ['super_admin', 'seva_manager']);
+    const clean = cleanSeva(await readJson(req));
+    const doc = await patchDoc('sevaitem', b, clean);
+    if (!doc) throw new HttpError(404, 'Seva not found.');
+    await audit(me, 'UPDATE_SEVA_ITEM', `Updated seva: ${doc.name} Rs.${doc.price} ${doc.active ? 'ON' : 'OFF'}`);
+    return send(res, 200, doc);
+  }
+  if (a === 'sevaitems' && b && method === 'DELETE') {
+    const me = await requireRole(req, ['super_admin', 'seva_manager']);
+    const old = await getDoc('sevaitem', b);
+    if (!(await deleteDoc('sevaitem', b))) throw new HttpError(404, 'Seva not found.');
+    await audit(me, 'DELETE_SEVA_ITEM', `Deleted seva: ${old?.name}`);
+    return send(res, 200, { success: true });
+  }
+
+  // ---------------- events (committee adds local temple events) ----------------
+  if (key === 'GET /events') {
+    const all = (await listDocs('event', 500)).sort((x, y) => (x.date < y.date ? -1 : 1));
+    if (url.searchParams.get('all') === '1') { await requireRole(req, CONTENT); return send(res, 200, all); }
+    return send(res, 200, all.filter((e) => e.published));
+  }
+  const cleanEvent = (d) => {
+    const titleEn = str(d.titleEn, 150);
+    const date = str(d.date, 10), endDate = str(d.endDate, 10);
+    if (!titleEn) throw new HttpError(400, 'Event title is required.');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new HttpError(400, 'Choose the event date.');
+    if (endDate && (!/^\d{4}-\d{2}-\d{2}$/.test(endDate) || endDate < date)) throw new HttpError(400, 'End date cannot be before the start date.');
+    return {
+      titleEn, titleOr: str(d.titleOr, 150) || titleEn, titleHi: str(d.titleHi, 150) || titleEn, date, endDate,
+      time: str(d.time, 60), place: str(d.place, 150), descEn: str(d.descEn, 800), descOr: str(d.descOr, 800) || str(d.descEn, 800), descHi: str(d.descHi, 800) || str(d.descEn, 800),
+      published: d.published !== false,
+    };
+  };
+  if (key === 'POST /events') {
+    const me = await requireRole(req, CONTENT);
+    const doc = await insertDoc('event', newId('evt'), cleanEvent(await readJson(req)));
+    await audit(me, 'ADD_EVENT', `Added event: ${doc.titleEn} (${doc.date})`);
+    return send(res, 201, doc);
+  }
+  if (a === 'events' && b && method === 'PATCH') {
+    const me = await requireRole(req, CONTENT);
+    const doc = await patchDoc('event', b, cleanEvent(await readJson(req)));
+    if (!doc) throw new HttpError(404, 'Event not found.');
+    await audit(me, 'UPDATE_EVENT', `Updated event: ${doc.titleEn}`);
+    return send(res, 200, doc);
+  }
+  if (a === 'events' && b && method === 'DELETE') {
+    const me = await requireRole(req, CONTENT);
+    const old = await getDoc('event', b);
+    if (!(await deleteDoc('event', b))) throw new HttpError(404, 'Event not found.');
+    await audit(me, 'DELETE_EVENT', `Deleted event: ${old?.titleEn}`);
+    return send(res, 200, { success: true });
+  }
+
+  // ---------------- daily darshan / ritual timings ----------------
+  if (key === 'GET /timings') {
+    const t = await getDoc('config', 'timings');
+    return send(res, 200, { rows: t?.rows?.length ? t.rows : DEFAULT_TIMINGS, custom: !!t?.rows?.length });
+  }
+  if (key === 'POST /timings') {
+    const me = await requireRole(req, CONTENT);
+    const d = await readJson(req);
+    if (d.reset) { await deleteDoc('config', 'timings'); await audit(me, 'RESET_TIMINGS', 'Timings reset to default'); return send(res, 200, { rows: DEFAULT_TIMINGS, custom: false }); }
+    const rows = (Array.isArray(d.rows) ? d.rows : []).slice(0, 40).map((r) => ({
+      time: str(r.time, 40), eventEn: str(r.eventEn, 120), eventOr: str(r.eventOr, 120) || str(r.eventEn, 120), eventHi: str(r.eventHi, 120) || str(r.eventEn, 120),
+      descEn: str(r.descEn, 300), descOr: str(r.descOr, 300) || str(r.descEn, 300), descHi: str(r.descHi, 300) || str(r.descEn, 300),
+    })).filter((r) => r.time && r.eventEn);
+    if (!rows.length) throw new HttpError(400, 'Add at least one timing row (time and name).');
+    if (await getDoc('config', 'timings')) await patchDoc('config', 'timings', { rows }); else await insertDoc('config', 'timings', { rows });
+    await audit(me, 'UPDATE_TIMINGS', `Updated daily timings (${rows.length} rows)`);
+    return send(res, 200, { rows, custom: true });
   }
 
   // ---------------- grievance tickets ----------------

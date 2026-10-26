@@ -3,6 +3,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { api } from '../api/client';
 import { Mail, Phone, Clock, Send, MessageSquare, ShieldAlert, Award, FileText, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
 import { SITE } from '../config/site';
+import LocationCard from '../components/LocationCard';
 
 export default function ContactGrievance() {
   const { t } = useLanguage();
@@ -125,7 +126,9 @@ export default function ContactGrievance() {
 
         </div>
 
-        {/* Contact Form & FAQs split */}
+        <div className="mb-10"><LocationCard /></div>
+
+{/* Contact Form & FAQs split */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           
           {/* Contact form panel */}

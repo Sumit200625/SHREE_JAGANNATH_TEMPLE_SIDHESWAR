@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
-import { SEVAS } from '../../shared/catalog';
+import { SEVAS, NAKSHATRAS, DEFAULT_SLOTS } from '../../shared/catalog';
 import { Link } from 'react-router-dom';
 import { Gift, Calendar, User, Search, ShieldAlert, Award, FileText, CheckCircle2, XCircle } from 'lucide-react';
 
@@ -22,7 +22,10 @@ export default function SevaPuja() {
     address: user ? user.address || '' : '',
     familyMembers: '',
     selectedDate: '',
-    sevaType: 'Annadan Seva (Mahaprasad)',
+    sevaId: '',
+    slot: '',
+    nakshatra: '',
+    sankalpa: '',
     specialRequest: ''
   });
   const [loading, setLoading] = useState(false);
@@ -35,7 +38,17 @@ export default function SevaPuja() {
   const [trackError, setTrackError] = useState('');
   const [trackingLoading, setTrackingLoading] = useState(false);
 
-  const sevasList = SEVAS;
+  // The seva list (names, prices, slots) comes from the database; the committee manages it in the Admin panel
+  const [sevasList, setSevasList] = useState(SEVAS.map((x, i) => ({ ...x, id: `sv_${i + 1}`, slots: DEFAULT_SLOTS })));
+  useEffect(() => {
+    api.getSevaItems().then((list) => {
+      if (Array.isArray(list)) {
+        setSevasList(list);
+        setFormData((f) => ({ ...f, sevaId: list.find((x) => x.id === f.sevaId)?.id || list[0]?.id || '', slot: '' }));
+      }
+    }).catch(() => setFormData((f) => ({ ...f, sevaId: f.sevaId || 'sv_1' })));
+  }, []);
+  const chosen = sevasList.find((x) => x.id === formData.sevaId) || sevasList[0];
 
   const today = new Date(Date.now() + 5.5 * 3600 * 1000).toISOString().slice(0, 10);
 
@@ -46,12 +59,16 @@ export default function SevaPuja() {
     setLoading(true);
     try {
       // Price is decided by the server from the seva name; payment is verified server-side before the booking is saved.
+      if (!chosen) throw new Error('No seva is open for booking right now. Please contact the temple office.');
+      if (!formData.slot) throw new Error('Please choose a time slot.');
       const out = await api.paySeva({
         ...formData,
+        sevaId: chosen.id,
+        sevaType: chosen.name,
         familyMembers: formData.familyMembers.split(',').map(m => m.trim()).filter(Boolean),
       });
       setSuccessBooking(out.record);
-      setFormData(prev => ({ ...prev, familyMembers: '', selectedDate: '', specialRequest: '' }));
+      setFormData(prev => ({ ...prev, familyMembers: '', selectedDate: '', slot: '', sankalpa: '', specialRequest: '' }));
     } catch (err) {
       setErrorMsg(err.message);
     } finally {
@@ -79,7 +96,7 @@ export default function SevaPuja() {
   // Receipt Download
   const generateReceiptPDF = (booking) => {
     const receiptContent = `========================================================
-SIDHESWAR SHREE JAGANNATH TEMPLE TRUST, DIGAPAHANDI
+SHREE JAGANNATH TEMPLE SIDHESWAR, SIDHASWAR, GANJAM, ODISHA
 OFFICIAL SEVA BOOKING RECEIPT
 ========================================================
 Booking Reference: ${booking.bookingReference}
@@ -87,12 +104,15 @@ Devotee Name:      ${booking.devoteeName}
 Mobile Number:     ${booking.phone}
 Gotra:             ${booking.gotra || "N/A"}
 Selected Date:     ${booking.selectedDate}
+Time Slot:         ${booking.slot || "N/A"}
+Nakshatra:         ${booking.nakshatra || "N/A"}
+Sankalpa:          ${booking.sankalpa || "N/A"}
 Seva Category:     ${booking.sevaType}
 Contribution Amt:  INR ${booking.amount}/-
 Payment Status:    ${booking.paymentStatus.toUpperCase()} (Razorpay)
 Approval Status:   ${booking.approvalStatus.toUpperCase()}
 ========================================================
-* Seva booking is confirmed only after temple committee approval.
+* Seva booking is confirmed by the temple office after payment.
 * Present a copy of this slip at the temple office on arrival.
 ========================================================`;
 
@@ -175,17 +195,20 @@ Approval Status:   ${booking.approvalStatus.toUpperCase()}
                   <div className="flex flex-col space-y-1.5 col-span-1 md:col-span-2">
                     <label className="text-xs font-bold text-temple-700 uppercase">{t('selectSevaType')}</label>
                     <select
-                      value={formData.sevaType}
-                      onChange={(e) => setFormData(prev => ({ ...prev, sevaType: e.target.value }))}
+                      value={formData.sevaId}
+                      onChange={(e) => setFormData(prev => ({ ...prev, sevaId: e.target.value, slot: '' }))}
                       className="w-full px-4 py-3 bg-temple-50 border border-saffron/20 rounded-xl text-xs font-semibold focus:outline-none"
                     >
-                      {sevasList.map((s, idx) => (
-                        <option key={idx} value={s.name}>{s.name} - ₹{s.price}</option>
+                      {sevasList.map((x) => (
+                        <option key={x.id} value={x.id}>{x.name} - {'\u20B9'}{x.price}</option>
                       ))}
                     </select>
-                    <span className="text-[10px] text-temple-500 font-semibold italic mt-1 pl-1">
-                      {sevasList.find(s => s.name === formData.sevaType)?.desc}
-                    </span>
+                    {chosen && (
+                      <div className="mt-2 p-3 bg-saffron/10 rounded-xl text-xs font-semibold text-temple-800 flex flex-wrap justify-between gap-2">
+                        <span className="italic">{chosen.desc}</span>
+                        <span className="font-extrabold text-maroon font-outfit">{'\u20B9'}{chosen.price}</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Devotee Name */}
@@ -212,6 +235,20 @@ Approval Status:   ${booking.approvalStatus.toUpperCase()}
                       onChange={(e) => setFormData(prev => ({ ...prev, selectedDate: e.target.value }))}
                       className="px-4 py-3 bg-temple-50 border border-saffron/20 rounded-xl text-xs focus:ring-1 focus:ring-saffron focus:outline-none"
                     />
+                  </div>
+
+                  {/* Time slot */}
+                  <div className="flex flex-col space-y-1.5">
+                    <label className="text-xs font-bold text-temple-700 uppercase">Time Slot</label>
+                    <select
+                      required
+                      value={formData.slot}
+                      onChange={(e) => setFormData(prev => ({ ...prev, slot: e.target.value }))}
+                      className="px-4 py-3 bg-temple-50 border border-saffron/20 rounded-xl text-xs font-semibold focus:outline-none"
+                    >
+                      <option value="">Select a slot</option>
+                      {(chosen?.slots || DEFAULT_SLOTS).map((sl) => <option key={sl} value={sl}>{sl}</option>)}
+                    </select>
                   </div>
 
                   {/* Phone */}
@@ -277,6 +314,32 @@ Approval Status:   ${booking.approvalStatus.toUpperCase()}
                     />
                   </div>
 
+                  {/* Nakshatra */}
+                  <div className="flex flex-col space-y-1.5">
+                    <label className="text-xs font-bold text-temple-700 uppercase">Nakshatra (of the devotee)</label>
+                    <select
+                      value={formData.nakshatra}
+                      onChange={(e) => setFormData(prev => ({ ...prev, nakshatra: e.target.value }))}
+                      className="px-4 py-3 bg-temple-50 border border-saffron/20 rounded-xl text-xs font-semibold focus:outline-none"
+                    >
+                      <option value="">Not known / skip</option>
+                      {NAKSHATRAS.map((n) => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Sankalpa */}
+                  <div className="flex flex-col space-y-1.5 col-span-1 md:col-span-2">
+                    <label className="text-xs font-bold text-temple-700 uppercase">Sankalpa (purpose / wish for the seva)</label>
+                    <textarea
+                      rows={2}
+                      maxLength={300}
+                      value={formData.sankalpa}
+                      onChange={(e) => setFormData(prev => ({ ...prev, sankalpa: e.target.value }))}
+                      placeholder="e.g. Good health of the family, success in studies, thanksgiving"
+                      className="px-4 py-3 bg-temple-50 border border-saffron/20 rounded-xl text-xs focus:ring-1 focus:ring-saffron focus:outline-none resize-none"
+                    />
+                  </div>
+
                   {/* Special request */}
                   <div className="flex flex-col space-y-1.5 col-span-1 md:col-span-2">
                     <label className="text-xs font-bold text-temple-700 uppercase">{t('specialRequest')}</label>
@@ -306,15 +369,15 @@ Approval Status:   ${booking.approvalStatus.toUpperCase()}
                 <CheckCircle2 size={56} className="text-emerald-600 mx-auto animate-pulse" />
                 
                 <div>
-                  <h3 className="text-2xl font-bold font-outfit text-emerald-800">Seva Booking Initiated!</h3>
+                  <h3 className="text-2xl font-bold font-outfit text-emerald-800">Payment Received - Booking Registered!</h3>
                   <p className="text-xs text-temple-600 mt-2 font-semibold">
-                    Your request was successfully saved. Keep the Reference Number to track status.
+                    Your payment is successful. Keep the Booking ID to track the status. {successBooking.email ? `Details are also emailed to ${successBooking.email}.` : ''}
                   </p>
                 </div>
 
                 <div className="p-5 bg-temple-50 rounded-xl border border-saffron/10 text-left max-w-md mx-auto space-y-2 text-xs md:text-sm">
                   <p className="flex justify-between">
-                    <span className="font-bold text-temple-600">Reference:</span> 
+                    <span className="font-bold text-temple-600">Booking ID:</span> 
                     <strong className="text-saffron select-all">{successBooking.bookingReference}</strong>
                   </p>
                   <p className="flex justify-between">
@@ -325,6 +388,16 @@ Approval Status:   ${booking.approvalStatus.toUpperCase()}
                     <span className="font-bold text-temple-600">Seva:</span> 
                     <span className="font-semibold text-temple-800">{successBooking.sevaType}</span>
                   </p>
+                  <p className="flex justify-between">
+                    <span className="font-bold text-temple-600">Time slot:</span> 
+                    <span className="font-semibold text-temple-800 text-right">{successBooking.slot || '-'}</span>
+                  </p>
+                  {successBooking.nakshatra && (
+                    <p className="flex justify-between">
+                      <span className="font-bold text-temple-600">Nakshatra:</span> 
+                      <span className="font-semibold text-temple-800">{successBooking.nakshatra}</span>
+                    </p>
+                  )}
                   <p className="flex justify-between">
                     <span className="font-bold text-temple-600">Date:</span> 
                     <span className="font-semibold text-temple-800">{successBooking.selectedDate}</span>
@@ -339,7 +412,7 @@ Approval Status:   ${booking.approvalStatus.toUpperCase()}
                   </p>
                   <p className="flex justify-between">
                     <span className="font-bold text-temple-600">Approval Status:</span> 
-                    <span className="px-2 py-0.5 bg-amber-100 text-amber-800 font-bold rounded-full text-[10px]">PENDING COMMITTEE APPROVAL</span>
+                    <span className="px-2 py-0.5 bg-amber-100 text-amber-800 font-bold rounded-full text-[10px]">AWAITING TEMPLE CONFIRMATION</span>
                   </p>
                 </div>
 
@@ -398,21 +471,12 @@ Approval Status:   ${booking.approvalStatus.toUpperCase()}
                 <div className="flex items-center justify-between border-b border-saffron/10 pb-3">
                   <h4 className="font-bold text-sm text-temple-800">Booking Record Details</h4>
                   <div className="flex gap-2">
-                    {trackResult.approvalStatus === 'approved' ? (
-                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded-full text-[10px] flex items-center gap-1">
-                        <CheckCircle2 size={10} />
-                        <span>APPROVED</span>
-                      </span>
-                    ) : trackResult.approvalStatus === 'rejected' ? (
-                      <span className="px-2 py-0.5 bg-rose-100 text-rose-800 font-bold rounded-full text-[10px] flex items-center gap-1">
-                        <XCircle size={10} />
-                        <span>REJECTED</span>
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 bg-amber-100 text-amber-800 font-bold rounded-full text-[10px]">
-                        PENDING APPROVAL
-                      </span>
-                    )}
+                    {(() => {
+                      const st = trackResult.approvalStatus;
+                      const map = { approved: ['CONFIRMED', 'bg-emerald-100 text-emerald-800'], completed: ['COMPLETED', 'bg-blue-100 text-blue-800'], cancelled: ['CANCELLED', 'bg-rose-100 text-rose-800'], rejected: ['NOT ACCEPTED', 'bg-rose-100 text-rose-800'] };
+                      const [label, cls] = map[st] || ['AWAITING CONFIRMATION', 'bg-amber-100 text-amber-800'];
+                      return <span className={`px-2 py-0.5 font-bold rounded-full text-[10px] ${cls}`}>{label}</span>;
+                    })()}
                   </div>
                 </div>
 
@@ -425,6 +489,12 @@ Approval Status:   ${booking.approvalStatus.toUpperCase()}
                     <span className="text-temple-500 block">Auspicious Date:</span>
                     <strong className="text-temple-900">{trackResult.selectedDate}</strong>
                   </div>
+                  {trackResult.slot && (
+                    <div>
+                      <span className="text-temple-500 block">Time Slot:</span>
+                      <strong className="text-temple-900">{trackResult.slot}</strong>
+                    </div>
+                  )}
                   <div>
                     <span className="text-temple-500 block">Seva Category:</span>
                     <strong className="text-temple-900">{trackResult.sevaType}</strong>
@@ -441,7 +511,7 @@ Approval Status:   ${booking.approvalStatus.toUpperCase()}
                   )}
                   {trackResult.rejectionReason && (
                     <div className="col-span-2 p-3 bg-rose-50 border border-rose-100 text-rose-800 rounded-lg">
-                      <span className="font-bold text-[10px] uppercase block">Reason for Rejection:</span>
+                      <span className="font-bold text-[10px] uppercase block">Note from temple office:</span>
                       <p className="mt-1 text-[11px] font-semibold">{trackResult.rejectionReason}</p>
                     </div>
                   )}

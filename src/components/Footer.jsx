@@ -120,14 +120,16 @@ export default function Footer() {
         {/* Bottom Bar: Copyright & Policies */}
         <div className="border-t border-white/10 pt-8 mt-4 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-temple-300">
           <p>
-            &copy; {currentYear} Sidheswar Shree Jagannath Temple Managing Trust, Digapahandi. All Rights Reserved.
+            &copy; {currentYear} Shree Jagannath Temple Sidheswar, Sidhaswar, Ganjam, Odisha. All Rights Reserved.
           </p>
-          <div className="flex space-x-4">
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
             <Link to="/contact?tab=grievance" className="hover:text-gold transition-colors">Report Grievance</Link>
             <span>|</span>
-            <span className="hover:text-gold cursor-pointer">Privacy Policy</span>
+            <Link to="/privacy-policy" className="hover:text-gold transition-colors">Privacy Policy</Link>
             <span>|</span>
-            <span className="hover:text-gold cursor-pointer">Terms and Conditions</span>
+            <Link to="/terms" className="hover:text-gold transition-colors">Terms and Conditions</Link>
+            <span>|</span>
+            <Link to="/refund-policy" className="hover:text-gold transition-colors">Refund &amp; Cancellation</Link>
           </div>
         </div>
 

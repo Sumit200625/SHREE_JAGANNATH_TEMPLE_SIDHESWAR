@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
-import { DONATION_CATEGORIES, MIN_DONATION, MAX_DONATION } from '../../shared/catalog';
+import { DONATION_PURPOSES, CATEGORY_LABELS, MIN_DONATION, MAX_DONATION } from '../../shared/catalog';
 import { Heart, Landmark, ShieldAlert, Award, FileText, CheckCircle2, QrCode } from 'lucide-react';
 
 export default function Donation() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user } = useAuth();
 
-  const preSets = [50, 100, 200, 500, 1000, 2000];
+  const preSets = [101, 501, 1001];
 
   // Donation state
-  const [amount, setAmount] = useState(500);
+  const [amount, setAmount] = useState(501);
   const [customVal, setCustomVal] = useState('');
   const [formData, setFormData] = useState({
     donorName: user ? user.name : '',
@@ -49,8 +49,8 @@ export default function Donation() {
     setErrorMsg('');
     if (!Number.isInteger(amount) || amount < MIN_DONATION || amount > MAX_DONATION) {
       setErrorMsg(amount > MAX_DONATION
-        ? 'For a single online payment the maximum is ₹' + MAX_DONATION.toLocaleString('en-IN') + '. For larger gifts please contact the temple office.'
-        : 'Please enter an amount of at least ₹' + MIN_DONATION + '.');
+        ? `For a single online payment the maximum is ₹${MAX_DONATION.toLocaleString('en-IN')}. For larger gifts please contact the temple office.`
+        : `Please enter an amount of at least ₹${MIN_DONATION}.`);
       return;
     }
     setLoading(true);
@@ -83,7 +83,7 @@ Transaction ID:   ${don.transactionId}
 Date & Time:      ${new Date(don.date).toLocaleString()}
 Donor Name:       ${don.donorName}
 PAN Number:       ${don.panNumber || "N/A"}
-Category/Purpose: ${don.category.toUpperCase().replace(/_/g, ' ')}
+Category/Purpose: ${(CATEGORY_LABELS[don.category] || don.category).toUpperCase()}
 Donation Amount:  INR ${don.amount}/-
 Payment Mode:     ${don.paymentGateway || 'Online'} (UPI / Card / Netbanking)
 ========================================================
@@ -136,13 +136,17 @@ Payment Mode:     ${don.paymentGateway || 'Online'} (UPI / Card / Netbanking)
                 </div>
 
                 {errorMsg && (
-                  <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl font-semibold">{errorMsg}</div>
+                  <div className="p-4 bg-rose-50 border border-rose-200 text-rose-800 text-xs rounded-xl font-semibold space-y-1">
+                    <p className="font-extrabold text-sm">Payment not completed</p>
+                    <p>{errorMsg}</p>
+                    <p className="text-rose-700/80">If money was deducted it is returned by your bank automatically. You can try again below.</p>
+                  </div>
                 )}
 
                 {/* Amount Selectors */}
                 <div className="space-y-3">
                   <label className="text-xs font-bold text-temple-700 uppercase">Select Contribution Amount (INR)</label>
-                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     {preSets.map((val) => (
                       <button
                         type="button"
@@ -173,10 +177,10 @@ Payment Mode:     ${don.paymentGateway || 'Online'} (UPI / Card / Netbanking)
                       className="w-full pl-8 pr-4 py-3 bg-temple-50 border border-saffron/20 rounded-xl text-xs font-semibold focus:ring-1 focus:ring-saffron focus:outline-none"
                     />
                   </div>
-                  <p className={'text-[11px] font-semibold ' + (customVal && amount < MIN_DONATION ? 'text-rose-700' : 'text-temple-500')}>
+                  <p className={`text-[11px] font-semibold ${customVal && amount < MIN_DONATION ? 'text-rose-700' : 'text-temple-500'}`}>
                     {customVal && amount < MIN_DONATION
-                      ? 'Minimum donation is ₹' + MIN_DONATION + '.'
-                      : 'Choose an amount or enter your own (minimum ₹' + MIN_DONATION + ').'}
+                      ? `Minimum donation is ₹${MIN_DONATION}.`
+                      : `Choose an amount or enter your own (minimum ₹${MIN_DONATION}).`}
                   </p>
                 </div>
 
@@ -190,13 +194,10 @@ Payment Mode:     ${don.paymentGateway || 'Online'} (UPI / Card / Netbanking)
                       onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
                       className="px-4 py-3 bg-temple-50 border border-saffron/20 rounded-xl text-xs font-semibold focus:outline-none"
                     >
-                      <option value="general_fund">General Temple Fund (ସାଧାରଣ ପାଣ୍ଠି)</option>
-                      <option value="anna_daan">Anna Daan Seva (ଅନ୍ନଦାନ ପାଣ୍ଠି)</option>
-                      <option value="festival_fund">Festival Celebration Fund (ଉତ୍ସବ ପାଣ୍ଠି)</option>
-                      <option value="construction_fund">Temple Boundary Construction (ମେଘନାଦ ପାଚେରୀ)</option>
-                      <option value="cleanliness_fund">Temple Cleanliness & Hygiene (ସ୍ୱଚ୍ଛତା ପାଣ୍ଠି)</option>
-                      <option value="charity">Social Welfare & Charity (ସେବା ସମୂହ)</option>
-                    </select>
+                      {DONATION_PURPOSES.map((p) => (
+                    <option key={p.key} value={p.key}>{language === 'or' ? p.or : language === 'hi' ? p.hi : p.label}</option>
+                  ))}
+                </select>
                   </div>
 
                   {/* Donor Name */}
@@ -316,7 +317,7 @@ Payment Mode:     ${don.paymentGateway || 'Online'} (UPI / Card / Netbanking)
                   </p>
                   <p className="flex justify-between">
                     <span className="font-bold text-temple-600">Purpose:</span> 
-                    <span className="font-semibold text-temple-800 capitalize">{successDonation.category.replace(/_/g, ' ')}</span>
+                    <span className="font-semibold text-temple-800 capitalize">{(CATEGORY_LABELS[successDonation.category] || successDonation.category)}</span>
                   </p>
                 </div>
 
@@ -374,7 +375,7 @@ Payment Mode:     ${don.paymentGateway || 'Online'} (UPI / Card / Netbanking)
                   <div key={don.id} className="p-3 bg-temple-50 rounded-xl border border-saffron/5 flex items-center justify-between text-xs font-semibold">
                     <div>
                       <h4 className="text-temple-900 font-bold">{don.donorName}</h4>
-                      <span className="text-[10px] text-temple-500">{don.category.replace(/_/g, ' ')}</span>
+                      <span className="text-[10px] text-temple-500">{(CATEGORY_LABELS[don.category] || don.category)}</span>
                     </div>
                     <span className="text-maroon font-outfit font-bold">₹{don.amount}</span>
                   </div>

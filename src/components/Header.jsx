@@ -76,6 +76,11 @@ export default function Header() {
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+          <div className="grid grid-cols-2 gap-2">
+            <Link to="/donation" onClick={close} className="py-3 rounded-xl bg-gold text-temple-dark font-extrabold text-sm text-center shadow">{t('donateNow')}</Link>
+            <Link to="/seva" onClick={close} className="py-3 rounded-xl bg-saffron text-white font-extrabold text-sm text-center shadow">{t('bookSeva')}</Link>
+          </div>
+
           {/* Account block first so login is always visible */}
           {isAuthenticated ? (
             <div className="p-3 rounded-2xl bg-saffron/10 border border-saffron/20 space-y-2">
@@ -167,6 +172,8 @@ export default function Header() {
 
         {/* Desktop right controls */}
         <div className="hidden lg:flex items-center space-x-3">
+          <Link to="/seva" className="px-4 py-1.5 bg-saffron text-white rounded-full text-sm font-bold hover:bg-saffron-dark shadow-sm">{t('bookSeva')}</Link>
+          <Link to="/donation" className="px-4 py-1.5 bg-gold text-temple-dark rounded-full text-sm font-extrabold hover:bg-gold-light shadow-sm ring-1 ring-gold/50">{t('donateNow')}</Link>
           <div className="relative">
             <button onClick={() => setLangOpen(!langOpen)} className="flex items-center gap-1.5 px-3 py-1.5 border border-saffron/30 bg-white rounded-full text-sm font-semibold text-temple-800">
               <Globe size={16} className="text-saffron" />

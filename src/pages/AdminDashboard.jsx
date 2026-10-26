@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
 import AdminPeople from '../components/AdminPeople';
+import AdminSevaItems from '../components/AdminSevaItems';
+import AdminEvents from '../components/AdminEvents';
+import AdminTimings from '../components/AdminTimings';
+import AdminReports from '../components/AdminReports';
 import { Image as ImageIcon, BarChart, Users, Bell, Gift, Heart, ShieldAlert, Award, FileText, CheckCircle2, XCircle, Database, HelpCircle, FileCheck, ClipboardList, Trash2, Edit } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -76,16 +80,19 @@ export default function AdminDashboard() {
   };
 
   // Seva actions
-  const handleApproveSeva = (id) => {
-    api.updateSevaStatus(id, 'approved', '').then(() => {
-      refreshDashboardData();
-    });
+  const setSevaStatus = (id, status) => {
+    api.updateSevaStatus(id, status, '').then(() => refreshDashboardData()).catch((e) => window.alert(e.message));
+  };
+  const handleApproveSeva = (id) => setSevaStatus(id, 'approved');
+  const refundSeva = (seva) => {
+    if (!window.confirm(`Refund Rs. ${seva.amount} to ${seva.devoteeName} through Razorpay?`)) return;
+    api.refundSeva(seva.id).then(() => { window.alert('Refund started. The money returns to the devotee in a few working days.'); refreshDashboardData(); }).catch((e) => window.alert(e.message));
   };
 
   const handleRejectSevaSubmit = (e) => {
     e.preventDefault();
     if (!rejectionReason) return;
-    api.updateSevaStatus(rejectingSevaId, 'rejected', rejectionReason).then(() => {
+    api.updateSevaStatus(rejectingSevaId, 'cancelled', rejectionReason).then(() => {
       setRejectingSevaId(null);
       setRejectionReason('');
       refreshDashboardData();
@@ -182,8 +189,12 @@ export default function AdminDashboard() {
   // Expose tab items depending on admin permissions
   const tabsList = [
     { code: 'analytics', label: 'Analytics Overview', icon: BarChart, roles: ['super_admin', 'donation_manager', 'seva_manager'] },
-    { code: 'sevas', label: 'Manage Sevas', icon: Gift, roles: ['super_admin', 'seva_manager'] },
+    { code: 'sevas', label: 'Seva Bookings', icon: Gift, roles: ['super_admin', 'seva_manager'] },
+    { code: 'sevaitems', label: 'Seva List & Prices', icon: Gift, roles: ['super_admin', 'seva_manager'] },
     { code: 'donations', label: 'Manage Donations', icon: Heart, roles: ['super_admin', 'donation_manager'] },
+    { code: 'events', label: 'Events', icon: Bell, roles: ['super_admin', 'content_editor'] },
+    { code: 'timings', label: 'Darshan Timings', icon: ClipboardList, roles: ['super_admin', 'content_editor'] },
+    { code: 'reports', label: 'Reports & CSV', icon: FileCheck, roles: ['super_admin', 'donation_manager', 'seva_manager'] },
     { code: 'notices', label: 'Manage Notices', icon: Bell, roles: ['super_admin', 'content_editor', 'notice_manager'] },
     { code: 'devotees', label: 'Devotees & Subscribers', icon: Users, roles: ['super_admin'] },
     { code: 'tickets', label: 'Grievance Hotline', icon: ClipboardList, roles: ['super_admin', 'content_editor'] },
@@ -335,53 +346,45 @@ export default function AdminDashboard() {
         {activeTab === 'sevas' && (
           <div className="space-y-6 animate-fade-in">
             <div className="glass-card p-6 border-t-4 border-maroon">
-              <h3 className="text-md font-bold text-temple-800 mb-4">Pending Seva Approval Requests</h3>
+              <h3 className="text-md font-bold text-temple-800 mb-1">Seva Bookings</h3>
+              <p className="text-[11px] text-temple-500 font-semibold mb-4">Confirm a new booking, mark it completed after the seva, or cancel it (the devotee gets an email each time).</p>
               <div className="overflow-x-auto text-xs font-semibold">
-                <table className="w-full text-left">
+                <table className="w-full text-left min-w-[860px]">
                   <thead>
                     <tr className="bg-temple-50 border-b border-saffron/10 text-[10px] text-temple-500 uppercase">
-                      <th className="p-3">Reference</th>
+                      <th className="p-3">Booking ID</th>
                       <th className="p-3">Devotee</th>
-                      <th className="p-3">Date</th>
-                      <th className="p-3">Seva Category</th>
+                      <th className="p-3">Seva / Date / Slot</th>
+                      <th className="p-3">Gotra / Nakshatra / Sankalpa</th>
                       <th className="p-3">Amount</th>
+                      <th className="p-3">Status</th>
                       <th className="p-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-saffron/5 text-temple-800">
-                    {sevas.map((seva) => (
-                      <tr key={seva.id} className="hover:bg-saffron/5">
-                        <td className="p-3 font-bold text-saffron">{seva.bookingReference}</td>
-                        <td className="p-3">{seva.devoteeName}</td>
-                        <td className="p-3">{seva.selectedDate}</td>
-                        <td className="p-3">{seva.sevaType}</td>
-                        <td className="p-3 text-maroon font-bold font-outfit">₹{seva.amount}</td>
-                        <td className="p-3 text-right space-x-2">
-                          {seva.approvalStatus === 'pending' ? (
-                            <>
-                              <button 
-                                onClick={() => handleApproveSeva(seva.id)}
-                                className="px-3 py-1 bg-emerald-600 text-white rounded font-bold hover:bg-emerald-700"
-                              >
-                                Approve
-                              </button>
-                              <button 
-                                onClick={() => setRejectingSevaId(seva.id)}
-                                className="px-3 py-1 bg-rose-600 text-white rounded font-bold hover:bg-rose-700"
-                              >
-                                Reject
-                              </button>
-                            </>
-                          ) : (
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              seva.approvalStatus === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-                            }`}>
-                              {seva.approvalStatus.toUpperCase()}
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                    {sevas.map((seva) => {
+                      const st = seva.approvalStatus;
+                      const cls = { approved: 'bg-emerald-100 text-emerald-800', completed: 'bg-blue-100 text-blue-800', cancelled: 'bg-rose-100 text-rose-800', rejected: 'bg-rose-100 text-rose-800' }[st] || 'bg-amber-100 text-amber-800';
+                      const label = { approved: 'CONFIRMED', completed: 'COMPLETED', cancelled: 'CANCELLED', rejected: 'REJECTED' }[st] || 'PENDING';
+                      const btn = 'px-2.5 py-1 text-white rounded font-bold';
+                      return (
+                        <tr key={seva.id} className="hover:bg-saffron/5 align-top">
+                          <td className="p-3 font-bold text-saffron">{seva.bookingReference}</td>
+                          <td className="p-3">{seva.devoteeName}<span className="block text-[10px] text-temple-500">{seva.phone}{seva.email ? ` | ${seva.email}` : ''}</span></td>
+                          <td className="p-3">{seva.sevaType}<span className="block text-[10px] text-temple-500">{seva.selectedDate} | {seva.slot || '-'}</span></td>
+                          <td className="p-3 max-w-[220px]">{seva.gotra || '-'} / {seva.nakshatra || '-'}<span className="block text-[10px] text-temple-500 break-words">{seva.sankalpa || ''}{seva.specialRequest ? ` (${seva.specialRequest})` : ''}</span></td>
+                          <td className="p-3 text-maroon font-bold font-outfit">{'\u20B9'}{seva.amount}<span className="block text-[10px] text-temple-500 font-sans">{seva.paymentStatus}</span></td>
+                          <td className="p-3"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${cls}`}>{label}</span></td>
+                          <td className="p-3 text-right space-x-1.5 whitespace-nowrap">
+                            {st === 'pending' && <button onClick={() => handleApproveSeva(seva.id)} className={`${btn} bg-emerald-600 hover:bg-emerald-700`}>Confirm</button>}
+                            {st === 'approved' && <button onClick={() => setSevaStatus(seva.id, 'completed')} className={`${btn} bg-blue-600 hover:bg-blue-700`}>Complete</button>}
+                            {(st === 'pending' || st === 'approved') && <button onClick={() => setRejectingSevaId(seva.id)} className={`${btn} bg-rose-600 hover:bg-rose-700`}>Cancel</button>}
+                            {(st === 'cancelled' || st === 'rejected') && seva.paymentStatus === 'paid' && <button onClick={() => refundSeva(seva)} className={`${btn} bg-amber-600 hover:bg-amber-700`}>Refund</button>}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {sevas.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-temple-500">No bookings yet.</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -573,6 +576,10 @@ export default function AdminDashboard() {
 
         {/* 5. Grievance Hotline */}
         {activeTab === 'devotees' && <AdminPeople />}
+        {activeTab === 'sevaitems' && <AdminSevaItems />}
+        {activeTab === 'events' && <AdminEvents />}
+        {activeTab === 'timings' && <AdminTimings />}
+        {activeTab === 'reports' && <AdminReports donations={donations} sevas={sevas} />}
 
         {activeTab === 'tickets' && (
           <div className="space-y-6 animate-fade-in">

@@ -1,8 +1,9 @@
 import crypto from 'node:crypto';
-import { db, insertDoc } from './db.js';
+import { db, insertDoc, listDocs } from './db.js';
+import { sendMail } from './notify.js';
 import { HttpError, str, isEmail, isPhone } from './http.js';
 import { newId } from './auth.js';
-import { SEVAS, DONATION_CATEGORIES, MIN_DONATION, MAX_DONATION } from '../shared/catalog.js';
+import { SEVAS, DONATION_CATEGORIES, CATEGORY_LABELS, NAKSHATRAS, DEFAULT_SLOTS, MIN_DONATION, MAX_DONATION } from '../shared/catalog.js';
 
 export const paymentsEnabled = () => !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
 
@@ -48,18 +49,26 @@ export async function createOrder(input, user) {
     };
   } else if (input.type === 'seva') {
     const b = input.booking || {};
-    const seva = SEVAS.find((s) => s.name === b.sevaType);
-    if (!seva) throw new HttpError(400, 'Invalid seva selected.');
-    amount = seva.price;
+    // the price always comes from the seva list in the database, never from the browser
+    const items = await listDocs('sevaitem', 300);
+    const seva = (items.length ? items : SEVAS.map((x, i) => ({ ...x, id: `sv_${i + 1}`, active: true }))).find((x) => x.id === b.sevaId || x.name === b.sevaType);
+    if (!seva || !seva.active || !(Number(seva.price) > 0)) throw new HttpError(400, 'This seva is not available for booking right now.');
+    amount = Number(seva.price);
+    const slots = Array.isArray(seva.slots) && seva.slots.length ? seva.slots : DEFAULT_SLOTS;
+    const slot = str(b.slot, 80);
+    if (!slots.includes(slot)) throw new HttpError(400, 'Please choose a time slot.');
+    const nakshatra = str(b.nakshatra, 40);
+    if (nakshatra && !NAKSHATRAS.includes(nakshatra)) throw new HttpError(400, 'Please choose a valid nakshatra.');
     const phone = str(b.phone, 10), email = str(b.email, 254).toLowerCase(), date = str(b.selectedDate, 10);
     if (!str(b.devoteeName, 80)) throw new HttpError(400, 'Devotee name is required.');
     if (!isPhone(phone)) throw new HttpError(400, 'Enter a valid 10-digit mobile number.');
     if (email && !isEmail(email)) throw new HttpError(400, 'Enter a valid email address.');
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < istToday()) throw new HttpError(400, 'Choose a seva date from today onwards.');
+    if (date > new Date(Date.now() + 5.5 * 3600e3 + 366 * 86400e3).toISOString().slice(0, 10)) throw new HttpError(400, 'Please choose a date within the next year.');
     const family = Array.isArray(b.familyMembers) ? b.familyMembers.map((m) => str(m, 60)).filter(Boolean).slice(0, 15) : [];
     payload = {
       devoteeName: str(b.devoteeName, 80), email, phone, gotra: str(b.gotra, 60), address: str(b.address, 300),
-      familyMembers: family, selectedDate: date, sevaType: seva.name, specialRequest: str(b.specialRequest, 500),
+      familyMembers: family, selectedDate: date, sevaType: seva.name, sevaId: seva.id || '', slot, nakshatra, sankalpa: str(b.sankalpa, 300), specialRequest: str(b.specialRequest, 500),
     };
   } else {
     throw new HttpError(400, 'Unknown payment type.');
@@ -118,6 +127,7 @@ async function createRecord(order, paymentId) {
       paymentGateway: 'Razorpay', transactionId: paymentId, receiptNumber: `RCPT-${istYear()}-${n}`,
       date: now, userId: order.user_id, orderId: order.id,
     });
+    await emailReceipt('donation', record);
     return { type: 'donation', record };
   }
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -126,7 +136,30 @@ async function createRecord(order, paymentId) {
     ...p, amount: order.amount_paise / 100, bookingReference: ref, paymentStatus: 'paid', approvalStatus: 'pending',
     transactionId: paymentId, createdAt: now, userId: order.user_id, orderId: order.id,
   });
+  await emailReceipt('seva', record);
   return { type: 'seva', record };
+}
+
+// Payment confirmation by email (only when the devotee gave an email and the Gmail password is set up)
+async function emailReceipt(type, r) {
+  if (!r.email) return;
+  const when = new Date(r.date || r.createdAt || Date.now()).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+  let subject, lines;
+  if (type === 'donation') {
+    subject = `Donation receipt ${r.receiptNumber} - Shree Jagannath Temple Sidheswar`;
+    lines = [`Dear ${r.donorName},`, '', 'Thank you for your donation to Shree Jagannath Temple Sidheswar. Jai Jagannath!', '',
+      `Receipt No: ${r.receiptNumber}`, `Amount: Rs. ${r.amount}`, `Purpose: ${CATEGORY_LABELS[r.category] || r.category}`, `Payment ID: ${r.transactionId}`, `Date: ${when}`];
+  } else {
+    subject = `Seva booking ${r.bookingReference} - Shree Jagannath Temple Sidheswar`;
+    lines = [`Dear ${r.devoteeName},`, '', 'Your seva booking and payment are received. Jai Jagannath!', '',
+      `Booking ID: ${r.bookingReference}`, `Seva: ${r.sevaType}`, `Date: ${r.selectedDate}`, `Time slot: ${r.slot || '-'}`,
+      `Gotra: ${r.gotra || '-'}`, `Nakshatra: ${r.nakshatra || '-'}`, `Sankalpa: ${r.sankalpa || '-'}`, `Amount paid: Rs. ${r.amount}`, `Payment ID: ${r.transactionId}`, '',
+      'The temple office will confirm your booking. You can check the status any time on the website using your Booking ID.'];
+  }
+  lines.push('', 'Shree Jagannath Temple Sidheswar, Sidhaswar, Ganjam, Odisha', 'WhatsApp / Phone: +91 93378 22942');
+  const text = lines.join('\n');
+  const html = `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#3b2417;white-space:pre-wrap;line-height:1.6">${text.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</div>`;
+  await sendMail(r.email, subject, text, html);
 }
 
 export async function getOrder(orderId) {

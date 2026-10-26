@@ -4,6 +4,10 @@ import { useLanguage } from '../context/LanguageContext';
 import { api } from '../api/client';
 import SubscribeBox from '../components/SubscribeBox';
 import PanchangCard from '../components/PanchangCard';
+import DailyTimings from '../components/DailyTimings';
+import UpcomingEvents from '../components/UpcomingEvents';
+import LocationCard from '../components/LocationCard';
+import { SITE } from '../config/site';
 import {
   Clock,
   MapPin,
@@ -18,43 +22,7 @@ import {
 export default function Home() {
   const { t } = useLanguage();
 
-  const [countdown, setCountdown] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
   const [notices, setNotices] = useState([]);
-
-  // Temple open/closed status: open 5:00-11:00 AM and 4:00-11:00 PM (Pahuda in between)
-  const currentHour = new Date().getHours();
-  const isTempleOpen = (currentHour >= 5 && currentHour < 11) || (currentHour >= 16 && currentHour < 23);
-
-  // Countdown timer for next festival (Rath Yatra 2027)
-  useEffect(() => {
-    const targetDate = new Date('2027-07-16T08:00:00').getTime();
-
-    const updateTimer = () => {
-      const now = Date.now();
-      const distance = targetDate - now;
-
-      if (distance <= 0) {
-        setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        return;
-      }
-
-      setCountdown({
-        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-        seconds: Math.floor((distance % (1000 * 60)) / 1000),
-      });
-    };
-
-    updateTimer();
-    const timerInterval = setInterval(updateTimer, 1000);
-    return () => clearInterval(timerInterval);
-  }, []);
 
   // Fetch latest notices for the homepage preview
   useEffect(() => {
@@ -73,13 +41,6 @@ export default function Home() {
       isMounted = false;
     };
   }, []);
-
-  const timings = [
-    { key: 'doorsOpen', time: '5:00 AM' },
-    { key: 'pahudaRest', time: '11:00 AM - 4:00 PM' },
-    { key: 'eveningAarti', time: '6:00 PM' },
-    { key: 'closingTime', time: '11:00 PM' },
-  ];
 
   const galleryPreview = [
     { src: '/assets/jagannath_tulasi_closeup.jpg', alt: 'Lord Jagannath Darshan' },
@@ -108,95 +69,43 @@ export default function Home() {
           <p className="text-lg md:text-xl text-cream-light/90 max-w-2xl mx-auto mb-10">
             {t('heroSubtitle')}
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              to="/darshan"
-              className="px-6 py-3 rounded-full bg-saffron hover:bg-saffron-dark transition-colors font-semibold shadow-lg"
-            >
-              {t('viewTimings')}
-            </Link>
-            <Link
-              to="/visit"
-              className="px-6 py-3 rounded-full border border-gold text-gold hover:bg-gold hover:text-temple-dark transition-colors font-semibold"
-            >
-              {t('getDirections')}
-            </Link>
+          <div className="flex flex-wrap justify-center gap-3 md:gap-4">
             <Link
               to="/donation"
-              className="px-6 py-3 rounded-full bg-gold text-temple-dark hover:bg-gold-light transition-colors font-semibold shadow-lg"
+              className="px-8 py-4 rounded-full bg-gold text-temple-dark hover:bg-gold-light transition-colors font-extrabold text-lg shadow-xl ring-2 ring-gold/40"
             >
               {t('donateNow')}
             </Link>
+            <Link
+              to="/seva"
+              className="px-8 py-4 rounded-full bg-saffron hover:bg-saffron-dark text-white transition-colors font-extrabold text-lg shadow-xl"
+            >
+              {t('bookSeva')}
+            </Link>
+            <Link
+              to="/darshan"
+              className="px-6 py-4 rounded-full border border-cream-light/70 text-cream-light hover:bg-cream-light hover:text-temple-dark transition-colors font-semibold"
+            >
+              {t('viewTimings')}
+            </Link>
+            <a
+              href={SITE.mapsLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-6 py-4 rounded-full border border-gold text-gold hover:bg-gold hover:text-temple-dark transition-colors font-semibold"
+            >
+              {t('getDirections')}
+            </a>
           </div>
         </div>
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-20 py-16">
-        {/* Temple Status + Daily Timings */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="glass-card rounded-2xl p-8 shadow-md flex flex-col justify-between">
-            <div>
-              <h2 className="text-xl font-bold font-outfit mb-4 flex items-center gap-2">
-                <Bell size={20} className="text-gold" />
-                {t('templeStatus')}
-              </h2>
-              <div className="flex items-center gap-2 text-lg font-semibold">
-                {isTempleOpen ? (
-                  <>
-                    <CheckCircle className="text-green-600" size={22} />
-                    <span className="text-green-700">{t('open')}</span>
-                  </>
-                ) : (
-                  <>
-                    <XCircle className="text-maroon" size={22} />
-                    <span className="text-maroon">{t('closed')}</span>
-                  </>
-                )}
-              </div>
-              <p className="text-sm text-temple-500 mt-3">{t('lastUpdated')}</p>
-            </div>
-          </div>
+        {/* Daily darshan & aarti timings (with open/closed status) */}
+        <DailyTimings />
 
-          <div className="glass-card rounded-2xl p-8 shadow-md">
-            <h2 className="text-xl font-bold font-outfit mb-4 flex items-center gap-2">
-              <Clock size={20} className="text-gold" />
-              {t('dailyTimings')}
-            </h2>
-            <ul className="space-y-2">
-              {timings.map((item) => (
-                <li key={item.key} className="flex justify-between border-b border-gold/20 pb-2">
-                  <span>{t(item.key)}</span>
-                  <span className="font-semibold">{item.time}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        {/* Festival Countdown */}
-        <section className="text-center">
-          <h2 className="text-2xl md:text-3xl font-bold font-outfit mb-8">
-            {t('upcomingFestival')}
-          </h2>
-          <div className="flex flex-wrap justify-center gap-4 md:gap-8">
-            {[
-              { label: t('days'), value: countdown.days },
-              { label: t('hours'), value: countdown.hours },
-              { label: t('minutes'), value: countdown.minutes },
-              { label: t('seconds'), value: countdown.seconds },
-            ].map((unit) => (
-              <div
-                key={unit.label}
-                className="glass-card rounded-2xl px-6 py-5 min-w-[90px] shadow-md"
-              >
-                <div className="text-3xl md:text-4xl font-extrabold text-saffron">
-                  {String(unit.value).padStart(2, '0')}
-                </div>
-                <div className="text-sm text-temple-500 mt-1">{unit.label}</div>
-              </div>
-            ))}
-          </div>
-        </section>
+        {/* Upcoming festivals & events */}
+        <UpcomingEvents />
 
         {/* Recent Notices */}
         <section>
@@ -254,6 +163,9 @@ export default function Home() {
         {/* Today's Panchang */}
         <PanchangCard />
 
+        {/* Location, address, contact + Google Map */}
+        <LocationCard />
+
         {/* Subscribe */}
         <SubscribeBox />
 
@@ -263,11 +175,6 @@ export default function Home() {
           <span>{t('fraudWarning')}</span>
         </section>
 
-        {/* Location */}
-        <section className="text-center text-temple-500 flex items-center justify-center gap-2">
-          <MapPin size={16} />
-          <span>{t('location')}</span>
-        </section>
       </div>
     </div>
   );

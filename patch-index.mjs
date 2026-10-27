@@ -14,17 +14,40 @@ let html = fs.readFileSync(file, 'utf8');
 const crlf = html.includes('\r\n');
 if (crlf) html = html.replace(/\r\n/g, '\n');
 
+// 0) clean-up: anything in <head> that is not a tag (for example a left-over  " />  from an older patch) shows up on the page. Remove it.
+const ATTR = `(?:"[^"]*"|'[^']*'|[^>"'])*`;                      // attribute text; a ">" inside quotes does not end the tag
+const TOKEN = new RegExp(`<!--[\\s\\S]*?-->|<(script|style)\\b[\\s\\S]*?<\\/\\1\\s*>|<title>[\\s\\S]*?<\\/title>|<\\/?[a-zA-Z][^\\s>/]*${ATTR}>`, 'g');
+function cleanHead(src) {
+  const headMatch = src.match(/(<head\b[^>]*>)([\s\S]*?)(<\/head>)/i);
+  if (!headMatch) return src;
+  const inner = headMatch[2];
+  let out = '', last = 0, removed = [];
+  for (const m of inner.matchAll(TOKEN)) {
+    const gap = inner.slice(last, m.index);
+    if (gap.trim()) removed.push(gap.trim());
+    out += gap.replace(/\S/g, '') + m[0];
+    last = m.index + m[0].length;
+  }
+  const tail = inner.slice(last);
+  if (tail.trim()) removed.push(tail.trim());
+  out += tail.replace(/\S/g, '');
+  if (removed.length) console.log('removed stray text from <head>:', removed.map((x) => JSON.stringify(x.slice(0, 60))).join(', '));
+  return src.replace(headMatch[0], () => headMatch[1] + out + headMatch[3]);
+}
+html = cleanHead(html);
+
 // 1) drop the old copies of the tags we manage (never the google-site-verification tag)
+const tag = (name, attr) => new RegExp(`^[ \\t]*<${name}\\s+${attr}${ATTR}>[ \\t]*\\n?`, 'gim');
 const strip = [
-  /^[ \t]*<title>[\s\S]*?<\/title>\n?/m,
-  /^[ \t]*<meta\s+name="description"[^>]*>\n?/gim,
-  /^[ \t]*<link\s+rel="canonical"[^>]*>\n?/gim,
-  /^[ \t]*<link\s+rel="(?:shortcut )?icon"[^>]*>\n?/gim,
-  /^[ \t]*<link\s+rel="apple-touch-icon"[^>]*>\n?/gim,
-  /^[ \t]*<meta\s+property="og:[^>]*>\n?/gim,
-  /^[ \t]*<meta\s+name="twitter:[^>]*>\n?/gim,
-  /^[ \t]*<meta\s+name="theme-color"[^>]*>\n?/gim,
-  /^[ \t]*<!-- seo:start -->[\s\S]*?<!-- seo:end -->\n?/gim,
+  /^[ \t]*<title>[\s\S]*?<\/title>[ \t]*\n?/gim,
+  tag('meta', 'name="description"'),
+  tag('link', 'rel="canonical"'),
+  tag('link', 'rel="(?:shortcut )?icon"'),
+  tag('link', 'rel="apple-touch-icon"'),
+  tag('meta', 'property="og:[^"]*"'),
+  tag('meta', 'name="twitter:[^"]*"'),
+  tag('meta', 'name="theme-color"'),
+  /^[ \t]*<!-- seo:start -->[\s\S]*?<!-- seo:end -->[ \t]*\n?/gim,
 ];
 for (const re of strip) html = html.replace(re, '');
 
@@ -62,6 +85,7 @@ const block = `    <!-- seo:start -->
 `;
 if (!html.includes('</head>')) { console.log('!! </head> not found in index.html - send me the file'); process.exit(1); }
 html = html.replace('</head>', block + '  </head>');
+html = cleanHead(html);   // final safety pass
 fs.writeFileSync(file, crlf ? html.replace(/\n/g, '\r\n') : html, 'utf8');
 console.log('updated index.html' + (/google-site-verification/.test(html) ? ' (Google verification tag kept)' : ' (note: no google-site-verification tag found in this file)'));
 
